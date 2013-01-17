@@ -64,7 +64,6 @@ void ChiCandProducer::produce(edm::Event& event, const edm::EventSetup& esetup){
 	dz_cut_fail++;	
 	continue;
     }
-    std::cout << "Starting invm comb function" << std::endl;
     std::vector<float> invmc= invmCombinations(*conv, pfphotons, ptr_pizero_rejected);
     if (*ptr_pizero_rejected){
         pizero_fail++;
