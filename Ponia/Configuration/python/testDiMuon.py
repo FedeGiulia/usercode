@@ -66,7 +66,8 @@ process.chiCandProducer = cms.EDProducer(
     dimuons     = cms.InputTag('dimuon'),
     pfphotons   = cms.InputTag('pfPhotons'),
     pfcandidates = cms.InputTag('particleFlow'),
-    pi0Window   = cms.vdouble(0.110,0.160),
+    pi0SmallWindow   = cms.vdouble(0.130,0.140),
+    pi0LargeWindow   = cms.vdouble(0.110,0.160),
     deltaMass   = cms.vdouble(0.0, 2.0),
     dzmax       = cms.double(0.5)
     )
@@ -78,6 +79,7 @@ process.out = cms.OutputModule(
                                             'keep *_dimuon_*_*',
 					    'keep *_*_conversions_*',
                                             'keep *_*_chicand_*',
+					    'keep *_*_piZeroRejectCand_*',
                                             ),
     #SelectEvents = cms.untracked.PSet(
     #SelectEvents = cms.vstring('')
