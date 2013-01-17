@@ -8,21 +8,27 @@ events = Events(inputfiles)
 chicand_h = Handle('vector<pat::CompositeCandidate>')
 chicand_l = ('chiCandProducer','chicand')
 
+piZero_h = Handle('std::vector<std::vector<float> >')
+piZero_l = ('chiCandProducer','piZeroRejectCand')
+
 histo = TH1D("chib","ChiB invariant mass", 100, 9.6,11.1)
-invmcVect = std.vector('float')(1000)
+#invmcVect = std.vector('float')(1000)
 
 for event in events:
 
 	event.getByLabel(chicand_l, chicand_h)
-	if not chicand_h.isValid():
+	event.getByLabel(piZero_l,piZero_h)
+
+	if (not chicand_h.isValid() or not piZero_h.isValid()):
         	continue
 
 	chiColl = chicand_h.product()
+	piZero = piZero_h.product()
 	select = 1
+	chi_index = 0
 	for cand in chiColl:
 #		if( cand.hasUserData("invmc") ):
-#			invmcVect = cand.userData(std.vector("float") )("invmc")
-#		print cand.userDataObjectType("invmc")
+#			invmcVect = cand.invmc()
 		photon_index = 0
 		dimuon_index = 1
 		if( cand.daughter(1).name() == "photon" ):
@@ -42,11 +48,12 @@ for event in events:
 
 		# deltamass selection is applied at producer stage with a value of 0.5
 
-#		for pi in invmcVect:
-#			if( pi > 0.125 or pi < 0.145):
-#				select = 0
+		for pi in piZero[chi_index]:
+			if( pi > 0.110 and pi < 0.160):
+				select = 0
 		if(select):
 			histo.Fill( cand.mass() - cand.daughter(dimuon_index).mass() + 9.46 )
+		chi_index += 1
 
 canvas = TCanvas()
 histo.Draw("E")

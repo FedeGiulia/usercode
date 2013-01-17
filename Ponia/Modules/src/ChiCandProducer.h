@@ -69,10 +69,12 @@ class ChiCandProducer : public edm::EDProducer {
     * of the conversion with PF photons.
     * Only combinations within the given window are retained */
   std::vector<float> invmCombinations(const reco::Conversion& conv,
-				      const reco::PFCandidateCollection& photons );
+				      const reco::PFCandidateCollection& photons,
+				      bool* _pizero_rejected );
 
   // low and high window limits
-  std::vector<double> pi0Window_;
+  std::vector<double> pi0SmallWindow_;
+  std::vector<double> pi0LargeWindow_;
   
   // delta mass range
   std::vector<double> deltaMass_;
@@ -81,6 +83,7 @@ class ChiCandProducer : public edm::EDProducer {
   int candidates;
   int delta_mass_fail;
   int dz_cut_fail;
+  int pizero_fail;
 
   
  

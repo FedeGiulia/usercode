@@ -7,11 +7,13 @@ ChiCandProducer::ChiCandProducer(const edm::ParameterSet& ps):
   convCollection_(ps.getParameter<edm::InputTag>("conversions")),
   diMuonCollection_(ps.getParameter<edm::InputTag>("dimuons")),
   pfCandidateCollection_(ps.getParameter<edm::InputTag>("pfcandidates")),
-  pi0Window_(ps.getParameter<std::vector<double>>("pi0Window")),
-  deltaMass_(ps.getParameter<std::vector<double>>("deltaMass")),
+  pi0SmallWindow_(ps.getParameter<std::vector<double> >("pi0SmallWindow")),
+  pi0LargeWindow_(ps.getParameter<std::vector<double> >("pi0LargeWindow")),
+  deltaMass_(ps.getParameter<std::vector<double> >("deltaMass")),
   dzMax_(ps.getParameter<double>("dzmax"))
 {
   produces<pat::CompositeCandidateCollection>("chicand");
+  produces<std::vector<std::vector<float> > >("piZeroRejectCand");
   candidates = 0;
   delta_mass_fail = 0;
   dz_cut_fail = 0;
@@ -20,15 +22,18 @@ ChiCandProducer::ChiCandProducer(const edm::ParameterSet& ps):
 
 void ChiCandProducer::produce(edm::Event& event, const edm::EventSetup& esetup){
 
-
   std::auto_ptr<pat::CompositeCandidateCollection> chiCandColl(new pat::CompositeCandidateCollection);
+  std::auto_ptr<std::vector<std::vector<float> > > piZeroRejectCand( new std::vector<std::vector<float> > );
+
+  bool pizero_rejected = false;
+  bool* ptr_pizero_rejected;
+  ptr_pizero_rejected = &pizero_rejected;
 
   edm::Handle<pat::CompositeCandidateCollection> dimuons;
   event.getByLabel(diMuonCollection_,dimuons);
 
   edm::Handle<reco::ConversionCollection> conversions;
   event.getByLabel(convCollection_,conversions);
-
   edm::Handle<reco::PFCandidateCollection> pfcandidates;
   event.getByLabel(pfCandidateCollection_,pfcandidates);
   
@@ -42,7 +47,9 @@ void ChiCandProducer::produce(edm::Event& event, const edm::EventSetup& esetup){
 
   // loop on conversion candidates, make chi cand
   for (reco::ConversionCollection::const_iterator conv = conversions->begin(); conv!= conversions->end(); ++conv){
-    
+
+    *ptr_pizero_rejected = false;
+
     pat::CompositeCandidate photonCand = makePhotonCandidate(*conv);
     pat::CompositeCandidate chiCand = makeChiCandidate(dimuonCand,photonCand);
     
@@ -57,14 +64,20 @@ void ChiCandProducer::produce(edm::Event& event, const edm::EventSetup& esetup){
 	dz_cut_fail++;	
 	continue;
     }
-    std::vector<float> invmc= invmCombinations(*conv, pfphotons);
-
-    chiCand.addUserData("invmc",invmc);
+    std::cout << "Starting invm comb function" << std::endl;
+    std::vector<float> invmc= invmCombinations(*conv, pfphotons, ptr_pizero_rejected);
+    if (*ptr_pizero_rejected){
+        pizero_fail++;
+        continue;
+    }
+//    chiCand.addUserData("invmc",invmc);
 
     chiCandColl->push_back(chiCand);
+    piZeroRejectCand->push_back(invmc);
     candidates++;    
   }
-  event.put(chiCandColl,"chicand"); 
+  event.put(chiCandColl,"chicand");
+  event.put(piZeroRejectCand,"piZeroRejectCand");
 }
 
 void ChiCandProducer::endJob(){
@@ -135,19 +148,26 @@ bool ChiCandProducer::cutDeltaMass(const pat::CompositeCandidate& chiCand,
 
 std::vector<float> 
 ChiCandProducer::invmCombinations(const reco::Conversion& conv,
-				  const reco::PFCandidateCollection& photons ){
+				  const reco::PFCandidateCollection& photons,
+				  bool* _pizero_rejected ){
   
   std::vector<float> ret;
- 
-  float m1 = pi0Window_[0];
-  float m2 = pi0Window_[1];
+  float small1 = pi0SmallWindow_[0];
+  float small2 = pi0SmallWindow_[1];
+  float large1 = pi0LargeWindow_[0];
+  float large2 = pi0LargeWindow_[1];
 
   for (reco::PFCandidateCollection::const_iterator photon = photons.begin();
        photon!=photons.end(); ++photon){
     
     float inv = (conv.refittedPair4Momentum() + photon->p4()).M(); 
-    if (inv > m1 && inv < m2) 
-      ret.push_back(inv);
+    if (inv > small1 && inv < small2){
+       *_pizero_rejected = true;
+       return ret;
+    }else if(inv > large1 && inv < large2){
+       ret.push_back(inv);
+    }else{
+    }
   }
 
   return ret;
