@@ -49,7 +49,7 @@ for event in events:
 		# deltamass selection is applied at producer stage with a value of 0.5
 
 		for pi in piZero[chi_index]:
-			if( pi > 0.110 and pi < 0.160):
+			if( pi > 0.120 and pi < 0.150):
 				select = 0
 		if(select):
 			histo.Fill( cand.mass() - cand.daughter(dimuon_index).mass() + 9.46 )
