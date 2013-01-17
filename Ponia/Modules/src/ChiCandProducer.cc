@@ -149,7 +149,12 @@ std::vector<float>
 ChiCandProducer::invmCombinations(const reco::Conversion& conv,
 				  const reco::PFCandidateCollection& photons,
 				  bool* _pizero_rejected ){
-  
+
+  // 2 windows are defined for Pi0 rejection, Conversions that, paired with others photons from the event, have an
+  // invariant mass inside the "small" window will be istantly rejected. Those that falls in the large window will
+  // be saved inside a vector for later refined offline selection. The rest are just supposed to have nothing to do 
+  // with Pi0 decay and therefore nothing is done with them.
+
   std::vector<float> ret;
   float small1 = pi0SmallWindow_[0];
   float small2 = pi0SmallWindow_[1];
