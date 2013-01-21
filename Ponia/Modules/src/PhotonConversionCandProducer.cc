@@ -3,11 +3,20 @@
 #include "DataFormats/PatCandidates/interface/CompositeCandidate.h"
 #include "DataFormats/ParticleFlowCandidate/interface/PFCandidateFwd.h"
 #include "DataFormats/ParticleFlowCandidate/interface/PFCandidate.h"
+#include "DataFormats/TrackReco/interface/Track.h"
+#include "DataFormats/TrackReco/interface/TrackBase.h"
 
 #include "CommonTools/Utils/interface/StringCutObjectSelector.h"
 #include "CommonTools/Utils/interface/StringToEnumValue.h"
+#include "CommonTools/Statistics/interface/ChiSquaredProbability.h"
+
+#include "RecoVertex/VertexTools/interface/VertexDistanceXY.h"
+#include <DataFormats/VertexReco/interface/VertexFwd.h>
+#include "Ponia/Modules/interface/VertexReProducer.h"
+
 #include <TMath.h>
 #include <boost/foreach.hpp>
+#include <vector>
 
 // to order from high to low ProbChi2
 bool ConversionLessByChi2(const reco::Conversion& c1, const reco::Conversion& c2){
@@ -31,6 +40,9 @@ bool ConversionEqualByTrack(const reco::Conversion& c1, const reco::Conversion& 
 
 }
 
+bool lt_(std::pair<double,short> a, std::pair<double,short> b) { 
+     return a.first < b.first; }
+
 // define operator== for conversions, those with at least one track in common
 namespace reco {
 
@@ -44,9 +56,14 @@ namespace reco {
 
 PhotonConversionCandProducer:: PhotonConversionCandProducer(const edm::ParameterSet& ps){
 
-  convCollection_      = ps.getParameter<edm::InputTag>("conversions");
-  diMuonCollection_    = ps.getParameter<edm::InputTag>("dimuons");
-  pfPhotonCollection_  = ps.getParameter<edm::InputTag>("pfphotons");
+  convCollection_          = ps.getParameter<edm::InputTag>("conversions");
+  diMuonCollection_        = ps.getParameter<edm::InputTag>("dimuons");
+  pfPhotonCollection_      = ps.getParameter<edm::InputTag>("pfphotons");
+  thePVs_                  = ps.getParameter<edm::InputTag>("primaryVertexTag");
+  wantTkVtxCompatibility_  = ps.getParameter<bool>("wantTkVtxCompatibility");
+  sigmaTkVtxComp_          = ps.getParameter<uint32_t>("sigmaTkVtxComp");
+  wantCompatibleInnerHits_ = ps.getParameter<bool>("wantCompatibleInnerHits");
+  TkMinNumOfDOF_           = ps.getParameter<uint32_t>("TkMinNumOfDOF");
 
   std::string algo = ps.getParameter<std::string>("convAlgo");
   convAlgo_ = StringToEnumValue<reco::Conversion::ConversionAlgorithm>(algo);
@@ -63,12 +80,17 @@ PhotonConversionCandProducer:: PhotonConversionCandProducer(const edm::Parameter
   algo_fail = 0;
   flag_fail = 0;
   duplicates = 0;
+  TkVtxC = 0;
+  CInnerHits = 0;
 }
 
 
 void PhotonConversionCandProducer::produce(edm::Event& event, const edm::EventSetup& esetup){
   std::auto_ptr<reco::ConversionCollection> outCollection(new reco::ConversionCollection);
-
+   
+  edm::Handle<reco::VertexCollection> priVtxs;
+  event.getByLabel(thePVs_, priVtxs);
+    
   edm::Handle<reco::ConversionCollection> pConv;
   event.getByLabel(convCollection_,pConv);
   
@@ -103,11 +125,28 @@ void PhotonConversionCandProducer::produce(edm::Event& event, const edm::EventSe
 	   flag_fail++;
 	   continue;
         }
-    }
-
-    outCollection->push_back(*conv);
+     }
+     
+    if (!wantTkVtxCompatibility_ && !wantCompatibleInnerHits_)
+       outCollection->push_back(*conv); 
+    
+    bool flagTkVtxCompatibility  = false;
+    bool flagCompatibleInnerHits = false;
+	           	
+    if (wantTkVtxCompatibility_ && checkTkVtxCompatibility(*conv,*priVtxs.product())) {
+          flagTkVtxCompatibility = true; TkVtxC++;}
+            
+    if (wantCompatibleInnerHits_ && conv->tracks().size()==2) {
+         reco::HitPattern hitPatA=conv->tracks().at(0)->hitPattern();
+         reco::HitPattern hitPatB=conv->tracks().at(1)->hitPattern();
+         if(foundCompatibleInnerHits(hitPatA,hitPatB) && foundCompatibleInnerHits(hitPatB,hitPatA) )
+           {
+	    flagCompatibleInnerHits = true; CInnerHits++;}
+    	 }
+    if (flagTkVtxCompatibility && flagCompatibleInnerHits && conv->tracks().at(0)->ndof() < TkMinNumOfDOF_ &&
+        conv->tracks().at(1)->ndof() < TkMinNumOfDOF_ ){
+       	outCollection->push_back(*conv);}		     
   }
-
   removeDuplicates(*outCollection);
   event.put(outCollection,"conversions");
 
@@ -139,11 +178,65 @@ void PhotonConversionCandProducer::removeDuplicates(reco::ConversionCollection& 
 
 }
 
+bool PhotonConversionCandProducer::
+checkTkVtxCompatibility(const reco::Conversion& conv, const reco::VertexCollection& priVtxs){
+
+  std::vector< std::pair< double, short> > idx[2];
+  short ik=-1;
+  BOOST_FOREACH(edm::RefToBase<reco::Track> tk, conv.tracks()){
+    ik++;
+    short count=-1;
+    BOOST_FOREACH(const reco::Vertex& vtx,priVtxs){
+      count++;
+    
+      double dz_= tk->dz(vtx.position());
+      double dzError_=tk->dzError();
+      dzError_=sqrt(dzError_*dzError_+vtx.covariance(2,2));
+
+      if(fabs(dz_)/dzError_ > sigmaTkVtxComp_) continue;
+      
+      idx[ik].push_back(std::pair<double,short>(fabs(dz_),count));
+    }
+    if(idx[ik].size()==0) {return false;}
+    
+    std::stable_sort(idx[ik].begin(),idx[ik].end(),lt_);
+  }
+  
+  if(idx[0][0].second==idx[1][0].second || idx[0][1].second==idx[1][0].second || idx[0][0].second==idx[1][1].second){
+    return true;
+ } 
+  return false;
+}
+
+bool PhotonConversionCandProducer::
+foundCompatibleInnerHits(const reco::HitPattern& hitPatA, const reco::HitPattern& hitPatB){
+  size_t count=0;
+  uint32_t oldSubStr=0;
+  uint32_t oldLayer=0;
+  for (int i=0; i<hitPatA.numberOfHits() && count<2; i++) {
+    uint32_t hitA = hitPatA.getHitPattern(i);
+    if (!hitPatA.validHitFilter(hitA) || !hitPatA.trackerHitFilter(hitA)) continue;
+    
+    if(hitPatA.getSubStructure(hitA)==oldSubStr && hitPatA.getLayer(hitA)==oldSubStr)
+      continue;
+
+    if(hitPatB.getTrackerMonoStereo(hitPatA.getSubStructure(hitA),hitPatA.getLayer(hitA)) != 0)
+      return true;
+    
+    oldSubStr=hitPatA.getSubStructure(hitA);
+    oldLayer=hitPatA.getLayer(hitA);
+    count++;
+  } 
+  return false;  
+}
+
 void PhotonConversionCandProducer::endJob(){
    std::cout << "Eventi con slection fail: " << selection_fail << std::endl;
    std::cout << "Eventi con algo fail: " << algo_fail << std::endl;
    std::cout << "Eventi con quality fail: " << flag_fail << std::endl;
    std::cout << "Duplicates totali trovati: " << duplicates << std::endl;
+   std::cout << "Events with conversion track and vertex compatibility: " << TkVtxC << std::endl;
+   std::cout << "Events with compatible inner hits for conversion tracks: " << CInnerHits << std::endl;
 }
 //define this as a plug-in
 DEFINE_FWK_MODULE(PhotonConversionCandProducer);
