@@ -23,7 +23,8 @@ ChiCandProducer::ChiCandProducer(const edm::ParameterSet& ps):
 void ChiCandProducer::produce(edm::Event& event, const edm::EventSetup& esetup){
 
   std::auto_ptr<pat::CompositeCandidateCollection> chiCandColl(new pat::CompositeCandidateCollection);
-  std::auto_ptr<std::vector<std::vector<float> > > piZeroRejectCand( new std::vector<std::vector<float> > );
+//  std::auto_ptr<std::vector<std::vector<float> > > piZeroRejectCand( new std::vector<std::vector<float> > );
+  std::auto_ptr<PiZeroRejCollection> piZeroRejectCand( new PiZeroRejCollection );
 
   bool pizero_rejected = false;
   bool* ptr_pizero_rejected;

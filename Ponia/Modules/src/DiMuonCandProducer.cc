@@ -25,7 +25,7 @@
 #include "TrackingTools/IPTools/interface/IPTools.h"
 #include "TrackingTools/PatternTools/interface/ClosestApproachInRPhi.h"
 
-/** $Id$*/
+/** $Id: DiMuonCandProducer.cc,v 1.1 2013/01/15 14:58:54 degano Exp $*/
 
 DiMuonCandProducer::DiMuonCandProducer(const edm::ParameterSet& iConfig):
   muons_(iConfig.getParameter<edm::InputTag>("muons")),
@@ -35,7 +35,9 @@ DiMuonCandProducer::DiMuonCandProducer(const edm::ParameterSet& iConfig):
   addMuonlessPrimaryVertex_(iConfig.getParameter<bool>("addMuonlessPrimaryVertex"))
   
 {  
-    produces<pat::CompositeCandidateCollection>();  
+    produces<pat::CompositeCandidateCollection>();
+    produces<std::vector<std::vector<float> > >("UpsilonCandLorentzVector");
+    dimuonSelectionCuts_ = iConfig.getParameter<std::string>("dimuonSelection");
 }
 
 
@@ -53,10 +55,13 @@ DiMuonCandProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
   typedef Candidate::LorentzVector LorentzVector;
 
   vector<double> muMasses;
+  vector<float> tempP4Cand;
+
   muMasses.push_back( 0.1134289256 );
   muMasses.push_back( 0.1134289256 );
 
   std::auto_ptr<pat::CompositeCandidateCollection> oniaOutput(new pat::CompositeCandidateCollection);
+  std::auto_ptr<UpsilonCand> lightUpsCand(new UpsilonCand);
   
   Vertex thePrimaryV;
   Vertex theBeamSpotV; 
@@ -300,9 +305,18 @@ DiMuonCandProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 	}	
       }
 
-     
+      StringCutObjectSelector<pat::CompositeCandidate> *dimuonSelection_ = new StringCutObjectSelector<pat::CompositeCandidate>(dimuonSelectionCuts_);
+
+      if( ! (*dimuonSelection_)(myCand) ) continue;
+
       // ---- Push back output ----  
       oniaOutput->push_back(myCand);
+      tempP4Cand.clear();
+      tempP4Cand.push_back(myCand.px());
+      tempP4Cand.push_back(myCand.py());
+      tempP4Cand.push_back(myCand.pz());
+      tempP4Cand.push_back(myCand.energy());
+      lightUpsCand->push_back(tempP4Cand);
     }
   }
 
@@ -310,7 +324,7 @@ DiMuonCandProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
   std::sort(oniaOutput->begin(),oniaOutput->end(),vPComparator_);
 
   iEvent.put(oniaOutput);
-
+  iEvent.put(lightUpsCand,"UpsilonCandLorentzVector");
 }
 
 

@@ -1,7 +1,9 @@
 from DataFormats.FWLite import Events, Handle
 from ROOT import TH1D, TCanvas, std
 
-inputfiles = 'testdimuon.root'
+#inputfiles = 'testdimuon.root'
+infile = open("fit_list_final",'r')
+inputfiles = infile.readlines()
 
 events = Events(inputfiles)
 
@@ -27,8 +29,6 @@ for event in events:
 	select = 1
 	chi_index = 0
 	for cand in chiColl:
-#		if( cand.hasUserData("invmc") ):
-#			invmcVect = cand.invmc()
 		photon_index = 0
 		dimuon_index = 1
 		if( cand.daughter(1).name() == "photon" ):

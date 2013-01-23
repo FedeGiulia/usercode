@@ -43,7 +43,6 @@ process.load('Configuration.StandardSequences.MagneticField_AutoFromDBCurrent_cf
 process.load('Configuration.Geometry.GeometryIdeal_cff')
 process.load("Configuration.StandardSequences.Reconstruction_cff")
 process.load('Ponia.Configuration.MuonSelection')
-process.load('Ponia.Modules.dimuonCandProducer_cfi')
 process.load('MuonAnalysis.MuonAssociators.patMuonsWithTrigger_cff')
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
 process.GlobalTag.globaltag = cms.string('GR_E_V31::All')
@@ -63,17 +62,29 @@ process.maxEvents = cms.untracked.PSet(
 
 process.selMuons = process.muonSelection2012.clone()
 
+process.dimuon = cms.EDProducer(
+	'DiMuonCandProducer',
+	muons=                    cms.InputTag('selMuons'),
+	beamSpotTag =             cms.InputTag('offlineBeamSpot'),
+	primaryVertexTag =        cms.InputTag('offlinePrimaryVertices'),
+	addCommonVertex=          cms.bool(True),
+	addMuonlessPrimaryVertex= cms.bool(True),
+        dimuonSelection = cms.string( 'p4.M > {0} && p4.M < {1} && p4.Pt > {2}'.format(cut_dimuon_Mass_low, cut_dimuon_Mass_high, cut_dimuon_Pt_min) ),
+	)
+
 process.diMuonCount = cms.EDFilter(
     'CandViewCountFilter',
     src = cms.InputTag(tag_dimuon),
     minNumber = cms.uint32(1),
+    filter = cms.bool(True)
     )
 
 process.diMuonSelection = cms.EDFilter(
     'CandViewSelector',
     src = cms.InputTag(tag_dimuon),
-    cut = cms.string('p4.M > {0} && p4.M < {1} && p4.Pt > {2}'.format(cut_dimuon_Mass_low, cut_dimuon_Mass_high, cut_dimuon_Pt_min) )# Formatting for dimuon cut string
-)
+    cut = cms.string('p4.M > {0} && p4.M < {1} && p4.Pt > {2}'.format(cut_dimuon_Mass_low, cut_dimuon_Mass_high, cut_dimuon_Pt_min) ),# Formatting for dimuon cut string
+    filter = cms.bool(True)
+    )
 
 process.conversionProducer = cms.EDProducer(
     'PhotonConversionCandProducer',
@@ -106,7 +117,7 @@ process.out = cms.OutputModule(
     "PoolOutputModule",
     fileName = cms.untracked.string('testdimuon.root'),
     outputCommands =  cms.untracked.vstring('drop *',
-                                            'keep *_dimuon_*_*',
+                                            'keep *_dimuon_UpsilonCandLorentzVector_*',
 					    'keep *_*_conversions_*',
                                             'keep *_*_chicand_*',
 					    'keep *_*_piZeroRejectCand_*',

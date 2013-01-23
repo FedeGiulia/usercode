@@ -20,7 +20,10 @@
 #include <CommonTools/UtilAlgos/interface/StringCutObjectSelector.h>
 #include "RecoVertex/VertexTools/interface/InvariantMassFromVertex.h"
 
-/** $Id$
+#include <vector>
+#include "DataFormats/Math/interface/LorentzVector.h"
+
+/** $Id: DiMuonCandProducer.h,v 1.1 2013/01/15 14:58:55 degano Exp $
  */
 
 template<typename T>
@@ -56,6 +59,11 @@ class DiMuonCandProducer : public edm::EDProducer {
   GreaterByVProb<pat::CompositeCandidate> vPComparator_;
 
   InvariantMassFromVertex massCalculator;
+
+  typedef std::vector<float> fl_vect;
+  typedef std::vector<fl_vect> UpsilonCand;
+
+  std::string dimuonSelectionCuts_;
 
 };
 

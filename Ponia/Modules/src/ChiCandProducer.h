@@ -3,7 +3,7 @@
    Declaration of ChiCandProducer
 
    \author Stefano Argiro
-   \version $Id$
+   \version $Id: ChiCandProducer.h,v 1.2 2013/01/17 10:17:15 degano Exp $
    \date 18 Dec 2012
 */
 
@@ -26,7 +26,7 @@
 #include <vector>
 
 static const char CVSId__ChiCandProducer[] = 
-"$Id$";
+"$Id: ChiCandProducer.h,v 1.2 2013/01/17 10:17:15 degano Exp $";
 
 /**
    Create a Chi(b,c) candidate by mathing dimuon and conversion
@@ -85,8 +85,8 @@ class ChiCandProducer : public edm::EDProducer {
   int dz_cut_fail;
   int pizero_fail;
 
-  
- 
+  typedef std::vector<float> fl_vect;
+  typedef std::vector<fl_vect> PiZeroRejCollection;
 };
 
 

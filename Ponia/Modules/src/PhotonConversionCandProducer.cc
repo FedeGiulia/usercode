@@ -143,9 +143,9 @@ void PhotonConversionCandProducer::produce(edm::Event& event, const edm::EventSe
            {
 	    flagCompatibleInnerHits = true; CInnerHits++;}
     	 }
-    if (flagTkVtxCompatibility && flagCompatibleInnerHits && conv->tracks().at(0)->ndof() < TkMinNumOfDOF_ &&
-        conv->tracks().at(1)->ndof() < TkMinNumOfDOF_ ){
-       	outCollection->push_back(*conv);}		     
+    if (!flagTkVtxCompatibility && flagCompatibleInnerHits && conv->tracks().at(0)->ndof() > TkMinNumOfDOF_ && conv->tracks().at(1)->ndof() > TkMinNumOfDOF_ ){
+       	outCollection->push_back(*conv);
+    }		     
   }
   removeDuplicates(*outCollection);
   event.put(outCollection,"conversions");
@@ -212,7 +212,6 @@ bool PhotonConversionCandProducer::
 foundCompatibleInnerHits(const reco::HitPattern& hitPatA, const reco::HitPattern& hitPatB){
   size_t count=0;
   uint32_t oldSubStr=0;
-  uint32_t oldLayer=0;
   for (int i=0; i<hitPatA.numberOfHits() && count<2; i++) {
     uint32_t hitA = hitPatA.getHitPattern(i);
     if (!hitPatA.validHitFilter(hitA) || !hitPatA.trackerHitFilter(hitA)) continue;
@@ -224,7 +223,6 @@ foundCompatibleInnerHits(const reco::HitPattern& hitPatA, const reco::HitPattern
       return true;
     
     oldSubStr=hitPatA.getSubStructure(hitA);
-    oldLayer=hitPatA.getLayer(hitA);
     count++;
   } 
   return false;  
