@@ -4,10 +4,11 @@
 
 debug_filename = 'debug_testAnalyzer.txt' # Name of the debug file
 input_filename = 'file:/data1/vcogoni/CMSSW_5_3_6/store/data/Run2012A/MuOnia/AOD/13Jul2012-v1/00000/FE7159F0-33CF-E111-A303-002618FDA279.root' # Path and name of the file to be analyzed
-tag_dimuon = 'dimuon' # Tag name of the dimuon collection as saved from process.muonSelection20xx
+tag_dimuon = 'dimuonProducer' # Tag name of the dimuon collection as saved from process.dimuonProducer
 cut_dimuon_Mass_low = 8.5
 cut_dimuon_Mass_high = 11.0
 cut_dimuon_Pt_min = 6.0
+cut_dimuon_rapidity = 1.6
 tag_conversion = 'allConversions'
 tag_pfPhotons = 'pfPhotons'
 conv_algo = 'mixed'
@@ -62,27 +63,20 @@ process.maxEvents = cms.untracked.PSet(
 
 process.selMuons = process.muonSelection2012.clone()
 
-process.dimuon = cms.EDProducer(
+process.dimuonProducer = cms.EDProducer(
 	'DiMuonCandProducer',
 	muons=                    cms.InputTag('selMuons'),
 	beamSpotTag =             cms.InputTag('offlineBeamSpot'),
 	primaryVertexTag =        cms.InputTag('offlinePrimaryVertices'),
 	addCommonVertex=          cms.bool(True),
 	addMuonlessPrimaryVertex= cms.bool(True),
-        dimuonSelection = cms.string( 'p4.M > {0} && p4.M < {1} && p4.Pt > {2}'.format(cut_dimuon_Mass_low, cut_dimuon_Mass_high, cut_dimuon_Pt_min) ),
+        dimuonSelection = cms.string( 'p4.M > {0} && p4.M < {1} && p4.Pt > {2} && abs(p4.Y) < {3}'.format(cut_dimuon_Mass_low, cut_dimuon_Mass_high, cut_dimuon_Pt_min, cut_dimuon_rapidity) ),
 	)
 
 process.diMuonCount = cms.EDFilter(
     'CandViewCountFilter',
     src = cms.InputTag(tag_dimuon),
     minNumber = cms.uint32(1),
-    filter = cms.bool(True)
-    )
-
-process.diMuonSelection = cms.EDFilter(
-    'CandViewSelector',
-    src = cms.InputTag(tag_dimuon),
-    cut = cms.string('p4.M > {0} && p4.M < {1} && p4.Pt > {2}'.format(cut_dimuon_Mass_low, cut_dimuon_Mass_high, cut_dimuon_Pt_min) ),# Formatting for dimuon cut string
     filter = cms.bool(True)
     )
 
@@ -117,14 +111,11 @@ process.out = cms.OutputModule(
     "PoolOutputModule",
     fileName = cms.untracked.string('testdimuon.root'),
     outputCommands =  cms.untracked.vstring('drop *',
-                                            'keep *_dimuon_UpsilonCandLorentzVector_*',
+                                            'keep *_dimuonProducer_UpsilonCandLorentzVector_*',
 					    'keep *_*_conversions_*',
                                             'keep *_*_chicand_*',
 					    'keep *_*_piZeroRejectCand_*',
                                             ),
-    #SelectEvents = cms.untracked.PSet(
-    #SelectEvents = cms.vstring('')
-    #)
     )
 
 
@@ -133,9 +124,8 @@ process.load('PhysicsTools.PatAlgos.producersLayer1.muonProducer_cfi')
 
 process.dimuonpath = cms.Path(process.patMuons*   #create PAT muons
                               process.selMuons*   #official muon selection
-                              process.dimuon*     #dimuon producer
+                              process.dimuonProducer*     #dimuon producer
 			      process.diMuonCount*
-			      process.diMuonSelection*
 			      process.conversionProducer*
 			      process.chiCandProducer)
 
@@ -144,4 +134,4 @@ process.end        = cms.EndPath(process.out)
 process.schedule = cms.Schedule(process.dimuonpath,process.end)
 
 # HACK ! Need to understand !
-process.dimuon.addMuonlessPrimaryVertex = False
+process.dimuonProducer.addMuonlessPrimaryVertex = False
