@@ -141,7 +141,7 @@
  <class name="edm::Wrapper<edm::ConditionsInRunBlock>"/>
  <class name="edm::Wrapper<edm::ConditionsInLumiBlock>"/>
 
- <class name="std::vector<std::vector<float> >" />
- <class name="edm::Wrapper<std::vector<std::vector<float> > >" />
+ <class name="edm::Wrapper<std::vector<std::vector<float> > >"/>
+
 
 </lcgdict>

@@ -68,7 +68,6 @@ namespace {
     edm::Wrapper<edm::ConditionsInRunBlock> dum21;
     edm::Wrapper<edm::ConditionsInEventBlock> dum31;
 
-    std::vector<std::vector<float> > dum_vect_vect_fl;
-    edm::Wrapper<std::vector<std::vector<float> > > dum_wrap_vect_vect_fl;
+    edm::Wrapper<std::vector<std::vector<float> > > dumVectVectFloat;
   };
 }
