@@ -14,6 +14,8 @@
 #include <DataFormats/VertexReco/interface/VertexFwd.h>
 #include "Ponia/Modules/interface/VertexReProducer.h"
 
+#include "CommonTools/Statistics/interface/ChiSquaredProbability.h"
+
 #include <TMath.h>
 #include <boost/foreach.hpp>
 #include <vector>
@@ -65,11 +67,16 @@ PhotonConversionCandProducer:: PhotonConversionCandProducer(const edm::Parameter
   wantCompatibleInnerHits_ = ps.getParameter<bool>("wantCompatibleInnerHits");
   TkMinNumOfDOF_           = ps.getParameter<uint32_t>("TkMinNumOfDOF");
 
+  wantHighpurity           = ps.getParameter<bool>("wantHighpurity");
+  _vertexChi2ProbCut       = ps.getParameter<double>("vertexChi2ProbCut");
+  _trackchi2Cut            = ps.getParameter<double>("trackchi2Cut");
+  _minDistanceOfApproachMinCut = ps.getParameter<double>("minDistanceOfApproachMinCut");
+  _minDistanceOfApproachMaxCut = ps.getParameter<double>("minDistanceOfApproachMaxCut");
+
   std::string algo = ps.getParameter<std::string>("convAlgo");
   convAlgo_ = StringToEnumValue<reco::Conversion::ConversionAlgorithm>(algo);
 
-  std::vector<std::string> qual = 
-    ps.getParameter<std::vector<std::string> >("convQuality"); 
+  std::vector<std::string> qual = ps.getParameter<std::vector<std::string> >("convQuality"); 
   if( qual[0] != "" ) convQuality_ =StringToEnumValue<reco::Conversion::ConversionQuality>(qual);
 
   convSelectionCuts_ = ps.getParameter<std::string>("convSelection");
@@ -82,6 +89,7 @@ PhotonConversionCandProducer:: PhotonConversionCandProducer(const edm::Parameter
   duplicates = 0;
   TkVtxC = 0;
   CInnerHits = 0;
+  highpurity_count = 0;
 }
 
 
@@ -108,7 +116,7 @@ void PhotonConversionCandProducer::produce(edm::Event& event, const edm::EventSe
 	selection_fail++;	
 	continue; // selection string
     }
-    if (conv->algo()!= convAlgo_){
+    if (convAlgo_ != 0 && conv->algo()!= convAlgo_){
 	algo_fail++;	
 	continue; // select algorithm
     }
@@ -130,20 +138,33 @@ void PhotonConversionCandProducer::produce(edm::Event& event, const edm::EventSe
     if (!wantTkVtxCompatibility_ && !wantCompatibleInnerHits_)
        outCollection->push_back(*conv); 
     
-    bool flagTkVtxCompatibility  = false;
-    bool flagCompatibleInnerHits = false;
+    bool flagTkVtxCompatibility  = true;
+    bool flagCompatibleInnerHits = true;
+    bool flagHighpurity          = true;
+
+    // The logic implies that by default this flags are true and if the check are not wanted conversions are saved.
+    // If checks are required and failed then don't save the conversion.
 	           	
-    if (wantTkVtxCompatibility_ && checkTkVtxCompatibility(*conv,*priVtxs.product())) {
-          flagTkVtxCompatibility = true; TkVtxC++;}
+    if (wantTkVtxCompatibility_ && ! checkTkVtxCompatibility(*conv,*priVtxs.product())) {
+          flagTkVtxCompatibility = false; 
+          TkVtxC++;
+    }
             
     if (wantCompatibleInnerHits_ && conv->tracks().size()==2) {
          reco::HitPattern hitPatA=conv->tracks().at(0)->hitPattern();
          reco::HitPattern hitPatB=conv->tracks().at(1)->hitPattern();
-         if(foundCompatibleInnerHits(hitPatA,hitPatB) && foundCompatibleInnerHits(hitPatB,hitPatA) )
-           {
-	    flagCompatibleInnerHits = true; CInnerHits++;}
-    	 }
-    if (!flagTkVtxCompatibility && flagCompatibleInnerHits && conv->tracks().at(0)->ndof() > TkMinNumOfDOF_ && conv->tracks().at(1)->ndof() > TkMinNumOfDOF_ ){
+         if(! ( foundCompatibleInnerHits(hitPatA,hitPatB) && foundCompatibleInnerHits(hitPatB,hitPatA) ) ){
+	    flagCompatibleInnerHits = false;
+            CInnerHits++;
+         }
+    }
+
+    if (wantHighpurity && ! HighpuritySubset(*conv,*priVtxs.product())){
+       flagHighpurity = false;
+       highpurity_count++;
+    }
+
+    if (flagTkVtxCompatibility && flagCompatibleInnerHits && flagHighpurity){
        	outCollection->push_back(*conv);
     }		     
   }
@@ -228,13 +249,49 @@ foundCompatibleInnerHits(const reco::HitPattern& hitPatA, const reco::HitPattern
   return false;  
 }
 
+
+
+bool PhotonConversionCandProducer::
+HighpuritySubset(const reco::Conversion& conv, const reco::VertexCollection& priVtxs){
+  // select high purity conversions our way:
+  // vertex chi2 cut
+  if(ChiSquaredProbability(conv.conversionVertex().chi2(),conv.conversionVertex().ndof())< _vertexChi2ProbCut) return false;
+
+  // d0 cut
+  // Find closest primary vertex
+  int closest_pv_index = 0;
+  int i=0;
+  BOOST_FOREACH(const reco::Vertex& vtx,priVtxs){
+    if( conv.zOfPrimaryVertexFromTracks( vtx.position() ) < conv.zOfPrimaryVertexFromTracks( priVtxs[closest_pv_index].position() ) ) closest_pv_index = i;
+    i++;
+  }
+  // Now check impact parameter wtr with the just found closest primary vertex
+  BOOST_FOREACH(const edm::RefToBase<reco::Track> tk, conv.tracks()) if(-tk->dxy(priVtxs[closest_pv_index].position())*tk->charge()/tk->dxyError()<0) return false;
+  
+  // chi2 of single tracks
+  BOOST_FOREACH(const edm::RefToBase<reco::Track> tk, conv.tracks()) if(tk->normalizedChi2() > _trackchi2Cut) return false;
+
+  // dof for each track  
+  BOOST_FOREACH(const edm::RefToBase<reco::Track> tk, conv.tracks()) if(tk->ndof()< TkMinNumOfDOF_) return false;
+  
+  // distance of approach cut
+  if (conv.distOfMinimumApproach() < _minDistanceOfApproachMinCut || conv.distOfMinimumApproach() > _minDistanceOfApproachMaxCut ) return false;
+  
+  return true;
+}
+
 void PhotonConversionCandProducer::endJob(){
-   std::cout << "Eventi con slection fail: " << selection_fail << std::endl;
-   std::cout << "Eventi con algo fail: " << algo_fail << std::endl;
-   std::cout << "Eventi con quality fail: " << flag_fail << std::endl;
-   std::cout << "Duplicates totali trovati: " << duplicates << std::endl;
-   std::cout << "Events with conversion track and vertex compatibility: " << TkVtxC << std::endl;
-   std::cout << "Events with compatible inner hits for conversion tracks: " << CInnerHits << std::endl;
+   std::cout << "###########################" << std::endl;
+   std::cout << "Conversion Candidate producer report:" << std::endl;
+   std::cout << "###########################" << std::endl;
+   std::cout << "Selection fail candidates: " << selection_fail << std::endl;
+   std::cout << "Algo fail candidates: " << algo_fail << std::endl;
+   std::cout << "Quality fail candidates: " << flag_fail << std::endl;
+   std::cout << "Total duplicates found: " << duplicates << std::endl;
+   std::cout << "Vertex compatibility fail: " << TkVtxC << std::endl;
+   std::cout << "Compatible inner hits fail: " << CInnerHits << std::endl;
+   std::cout << "Highpurity Subset fail: " << highpurity_count << std::endl;
+   std::cout << "###########################" << std::endl;
 }
 //define this as a plug-in
 DEFINE_FWK_MODULE(PhotonConversionCandProducer);

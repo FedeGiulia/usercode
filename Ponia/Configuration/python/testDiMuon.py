@@ -9,6 +9,7 @@ process.load('Ponia.Configuration.MuonSelection')
 process.load('Ponia.Modules.dimuonCandProducer_cfi')
 process.load('MuonAnalysis.MuonAssociators.patMuonsWithTrigger_cff')
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
+process.load('PhysicsTools.PatAlgos.producersLayer1.muonProducer_cfi')
 process.GlobalTag.globaltag = cms.string('GR_E_V31::All')
 
 process.MessageLogger.destinations = cms.untracked.vstring("debug_ChiAnalyzer.txt")
@@ -85,10 +86,6 @@ process.out = cms.OutputModule(
     #SelectEvents = cms.vstring('')
     #)
     )
-
-
-
-process.load('PhysicsTools.PatAlgos.producersLayer1.muonProducer_cfi')
 
 process.dimuonpath = cms.Path(process.patMuons*   #create PAT muons
                               process.selMuons*   #official muon selection

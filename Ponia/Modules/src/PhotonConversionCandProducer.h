@@ -3,7 +3,7 @@
    Declaration of PhotonConversionCandProducer
 
    \author Stefano Argiro
-   \version $Id: PhotonConversionCandProducer.h,v 1.1 2013/01/15 14:58:57 degano Exp $
+   \version $Id: PhotonConversionCandProducer.h,v 1.2 2013/01/21 14:59:49 degano Exp $
    \date 18 Dec 2012
 */
 
@@ -22,7 +22,7 @@
 #include "DataFormats/VertexReco/interface/Vertex.h"
 
 static const char CVSId__PhotonConversionCandProducer[] = 
-"$Id: PhotonConversionCandProducer.h,v 1.1 2013/01/15 14:58:57 degano Exp $";
+"$Id: PhotonConversionCandProducer.h,v 1.2 2013/01/21 14:59:49 degano Exp $";
 
 /**
    Select photon conversions and produce a conversion candidate collection
@@ -41,7 +41,8 @@ class PhotonConversionCandProducer : public edm::EDProducer {
   void removeDuplicates(reco::ConversionCollection& c);
   bool checkTkVtxCompatibility(const reco::Conversion&, const reco::VertexCollection&);
   bool foundCompatibleInnerHits(const reco::HitPattern& hitPatA, const reco::HitPattern& hitPatB); 
- 
+  bool HighpuritySubset(const reco::Conversion&, const reco::VertexCollection&);
+
   edm::InputTag convCollection_;
   edm::InputTag diMuonCollection_;
   edm::InputTag pfPhotonCollection_;
@@ -50,7 +51,12 @@ class PhotonConversionCandProducer : public edm::EDProducer {
   uint32_t    sigmaTkVtxComp_;
   bool        wantCompatibleInnerHits_;
   uint32_t    TkMinNumOfDOF_;
-  
+  bool wantHighpurity;
+  double _vertexChi2ProbCut;
+  double _trackchi2Cut;
+  double _minDistanceOfApproachMinCut;
+  double _minDistanceOfApproachMaxCut;
+
   int convAlgo_;
   std::vector<int>   convQuality_;
   
@@ -60,6 +66,7 @@ class PhotonConversionCandProducer : public edm::EDProducer {
   int duplicates;
   int TkVtxC;
   int CInnerHits;
+  int highpurity_count;
 
   std::string convSelectionCuts_;
 

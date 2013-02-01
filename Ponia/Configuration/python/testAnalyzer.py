@@ -9,10 +9,11 @@ cut_dimuon_Mass_low = 8.5
 cut_dimuon_Mass_high = 11.0
 cut_dimuon_Pt_min = 6.0
 cut_dimuon_rapidity = 1.6
+cut_dimuon_vprob = 0.01 # Minimum vertex probability for dimuon candidate
 tag_conversion = 'allConversions'
 tag_pfPhotons = 'pfPhotons'
-conv_algo = 'mixed'
-conv_qual = 'highPurity'
+conv_algo = 'undefined'
+conv_qual = 'generalTracksOnly'
 tag_primary_vertex = 'offlinePrimaryVertices'
 conv_vertex_rho = 1.5
 conv_vtx_comp = True
@@ -70,7 +71,7 @@ process.dimuonProducer = cms.EDProducer(
 	primaryVertexTag =        cms.InputTag('offlinePrimaryVertices'),
 	addCommonVertex=          cms.bool(True),
 	addMuonlessPrimaryVertex= cms.bool(True),
-        dimuonSelection = cms.string( 'p4.M > {0} && p4.M < {1} && p4.Pt > {2} && abs(p4.Y) < {3}'.format(cut_dimuon_Mass_low, cut_dimuon_Mass_high, cut_dimuon_Pt_min, cut_dimuon_rapidity) ),
+        dimuonSelection = cms.string( 'p4.M > {0} && p4.M < {1} && p4.Pt > {2} && abs(p4.Y) < {3} && userFloat("vProb") > {4}'.format(cut_dimuon_Mass_low, cut_dimuon_Mass_high, cut_dimuon_Pt_min, cut_dimuon_rapidity, cut_dimuon_vprob) ),
 	)
 
 process.diMuonCount = cms.EDFilter(
@@ -92,7 +93,12 @@ process.conversionProducer = cms.EDProducer(
     wantTkVtxCompatibility = cms.bool(conv_vtx_comp),
     sigmaTkVtxComp = cms.uint32(conv_tk_vtx),
     wantCompatibleInnerHits = cms.bool(conv_inn_hits),
-    TkMinNumOfDOF = cms.uint32(conv_min_dof)
+    TkMinNumOfDOF = cms.uint32(conv_min_dof),
+    wantHighpurity = cms.bool(True),
+    vertexChi2ProbCut = cms.double(0.0005),
+    trackchi2Cut = cms.double(10),
+    minDistanceOfApproachMinCut = cms.double(-0.25),
+    minDistanceOfApproachMaxCut = cms.double(1.00)
     )
 
 process.chiCandProducer = cms.EDProducer(
