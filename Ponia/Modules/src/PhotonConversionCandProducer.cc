@@ -135,9 +135,6 @@ void PhotonConversionCandProducer::produce(edm::Event& event, const edm::EventSe
         }
      }
      
-    if (!wantTkVtxCompatibility_ && !wantCompatibleInnerHits_)
-       outCollection->push_back(*conv); 
-    
     bool flagTkVtxCompatibility  = true;
     bool flagCompatibleInnerHits = true;
     bool flagHighpurity          = true;
