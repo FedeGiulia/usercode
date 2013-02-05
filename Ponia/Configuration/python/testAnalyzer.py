@@ -27,8 +27,8 @@ pi0_small_min = 0.130
 pi0_small_max = 0.140
 pi0_large_min = 0.110
 pi0_large_max = 0.160
-chi_deltaM_min = 0.0
-chi_deltaM_max = 2.0
+chi_deltaM_min = 0.0    # This two values define the minimum and the maximum values 
+chi_deltaM_max = 2.0    # required for the QValue of the Chi candidate
 chi_dzMax = 0.5
 
 
