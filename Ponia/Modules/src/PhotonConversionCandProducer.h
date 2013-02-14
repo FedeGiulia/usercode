@@ -3,7 +3,7 @@
    Declaration of PhotonConversionCandProducer
 
    \author Stefano Argiro
-   \version $Id: PhotonConversionCandProducer.h,v 1.2 2013/01/21 14:59:49 degano Exp $
+   \version $Id: PhotonConversionCandProducer.h,v 1.3 2013/02/01 16:17:24 degano Exp $
    \date 18 Dec 2012
 */
 
@@ -22,7 +22,7 @@
 #include "DataFormats/VertexReco/interface/Vertex.h"
 
 static const char CVSId__PhotonConversionCandProducer[] = 
-"$Id: PhotonConversionCandProducer.h,v 1.2 2013/01/21 14:59:49 degano Exp $";
+"$Id: PhotonConversionCandProducer.h,v 1.3 2013/02/01 16:17:24 degano Exp $";
 
 /**
    Select photon conversions and produce a conversion candidate collection
@@ -44,7 +44,6 @@ class PhotonConversionCandProducer : public edm::EDProducer {
   bool HighpuritySubset(const reco::Conversion&, const reco::VertexCollection&);
 
   edm::InputTag convCollection_;
-  edm::InputTag diMuonCollection_;
   edm::InputTag pfPhotonCollection_;
   edm::InputTag thePVs_;
   bool        wantTkVtxCompatibility_;
@@ -60,6 +59,7 @@ class PhotonConversionCandProducer : public edm::EDProducer {
   int convAlgo_;
   std::vector<int>   convQuality_;
   
+  int total_conversions;
   int selection_fail;
   int algo_fail;
   int flag_fail;
@@ -67,6 +67,7 @@ class PhotonConversionCandProducer : public edm::EDProducer {
   int TkVtxC;
   int CInnerHits;
   int highpurity_count;
+  int final_conversion;
 
   std::string convSelectionCuts_;
 

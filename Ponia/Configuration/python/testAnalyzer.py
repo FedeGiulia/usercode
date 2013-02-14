@@ -2,21 +2,21 @@
 ############################# CONFIGURATION PARAMETERS #############################
 ####################################################################################
 
-debug_filename = 'debug_testAnalyzer.txt' # Name of the debug file
-input_filename = 'file:/data1/vcogoni/CMSSW_5_3_6/store/data/Run2012A/MuOnia/AOD/13Jul2012-v1/00000/FE7159F0-33CF-E111-A303-002618FDA279.root' # Path and name of the file to be analyzed
+#debug_filename = 'debug_testAnalyzer.txt' # Name of the debug file
+input_filename = ''
 tag_dimuon = 'dimuonProducer' # Tag name of the dimuon collection as saved from process.dimuonProducer
 cut_dimuon_Mass_low = 8.5
 cut_dimuon_Mass_high = 11.0
-cut_dimuon_Pt_min = 6.0
+cut_dimuon_Pt_min = 0.0
 cut_dimuon_rapidity = 1.6
 cut_dimuon_vprob = 0.01 # Minimum vertex probability for dimuon candidate
 tag_conversion = 'allConversions'
 tag_pfPhotons = 'pfPhotons'
 conv_algo = 'undefined'
-conv_qual = 'generalTracksOnly'
+conv_qual = ['highPurity','generalTracksOnly']
 tag_primary_vertex = 'offlinePrimaryVertices'
 conv_vertex_rho = 1.5
-conv_vtx_comp = True
+conv_vtx_comp = False
 conv_tk_vtx = 5
 conv_inn_hits = True
 conv_min_dof = 3
@@ -49,7 +49,9 @@ process.load('MuonAnalysis.MuonAssociators.patMuonsWithTrigger_cff')
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
 process.GlobalTag.globaltag = cms.string('GR_E_V31::All')
 
-process.MessageLogger.destinations = cms.untracked.vstring(debug_filename)
+process.options   = cms.untracked.PSet( wantSummary = cms.untracked.bool(True) )
+
+#process.MessageLogger.destinations = cms.untracked.vstring(debug_filename)
 process.MessageLogger.cout = process.MessageLogger.cerr
 process.MessageLogger.cout.threshold = cms.untracked.string("DEBUG")
 
@@ -62,6 +64,21 @@ process.maxEvents = cms.untracked.PSet(
     input = cms.untracked.int32(-1)
     )
 
+process.triggerSelection = cms.EDFilter( "TriggerResultsFilter",
+    triggerConditions = cms.vstring(
+      'HLT_Dimuon5_Upsilon_v3',
+      'HLT_Dimuon7_Upsilon_v3',
+      'HLT_Dimuon8_Upsilon_v3',
+      'HLT_Dimuon11_Upsilon_v3',
+),
+    hltResults = cms.InputTag( "TriggerResults", "", "HLT" ),
+    l1tResults = cms.InputTag( "gtDigis" ),
+    l1tIgnoreMask = cms.bool( False ),
+    l1techIgnorePrescales = cms.bool( False ),
+    daqPartitions = cms.uint32( 1 ),
+    throw = cms.bool( True )
+)
+
 process.selMuons = process.muonSelection2012.clone()
 
 process.dimuonProducer = cms.EDProducer(
@@ -71,12 +88,12 @@ process.dimuonProducer = cms.EDProducer(
 	primaryVertexTag =        cms.InputTag('offlinePrimaryVertices'),
 	addCommonVertex=          cms.bool(True),
 	addMuonlessPrimaryVertex= cms.bool(True),
-        dimuonSelection = cms.string( 'p4.M > {0} && p4.M < {1} && p4.Pt > {2} && abs(p4.Y) < {3} && userFloat("vProb") > {4}'.format(cut_dimuon_Mass_low, cut_dimuon_Mass_high, cut_dimuon_Pt_min, cut_dimuon_rapidity, cut_dimuon_vprob) ),
+        dimuonSelection = cms.string( 'p4.M > {0} && p4.M < {1} && p4.Pt > {2} && abs(y) < {3} && userFloat("vProb") > {4}'.format(cut_dimuon_Mass_low, cut_dimuon_Mass_high, cut_dimuon_Pt_min, cut_dimuon_rapidity, cut_dimuon_vprob) ),
 	)
 
 process.diMuonCount = cms.EDFilter(
     'CandViewCountFilter',
-    src = cms.InputTag(tag_dimuon),
+    src = cms.InputTag('dimuonProducer'),
     minNumber = cms.uint32(1),
     filter = cms.bool(True)
     )
@@ -84,7 +101,6 @@ process.diMuonCount = cms.EDFilter(
 process.conversionProducer = cms.EDProducer(
     'PhotonConversionCandProducer',
     conversions = cms.InputTag(tag_conversion),
-    dimuons     = cms.InputTag(tag_dimuon),
     pfphotons   = cms.InputTag(tag_pfPhotons),
     convAlgo    = cms.string(conv_algo),
     convQuality = cms.vstring(conv_qual),
@@ -94,7 +110,7 @@ process.conversionProducer = cms.EDProducer(
     sigmaTkVtxComp = cms.uint32(conv_tk_vtx),
     wantCompatibleInnerHits = cms.bool(conv_inn_hits),
     TkMinNumOfDOF = cms.uint32(conv_min_dof),
-    wantHighpurity = cms.bool(True),
+    wantHighpurity = cms.bool(False),
     vertexChi2ProbCut = cms.double(0.0005),
     trackchi2Cut = cms.double(10),
     minDistanceOfApproachMinCut = cms.double(-0.25),
@@ -104,7 +120,7 @@ process.conversionProducer = cms.EDProducer(
 process.chiCandProducer = cms.EDProducer(
     'ChiCandProducer',
     conversions = cms.InputTag(tag_chi_conv_prod, tag_chi_conv_lab),
-    dimuons     = cms.InputTag(tag_dimuon),
+    dimuons     = cms.InputTag('dimuonProducer'),
     pfphotons   = cms.InputTag(tag_pfPhotons),
     pfcandidates = cms.InputTag(tag_pfCandidates),
     pi0SmallWindow   = cms.vdouble(pi0_small_min, pi0_small_max),
@@ -119,8 +135,11 @@ process.out = cms.OutputModule(
     outputCommands =  cms.untracked.vstring('drop *',
                                             'keep *_dimuonProducer_UpsilonCandLorentzVector_*',
 					    'keep *_*_conversions_*',
-                                            'keep *_*_chicand_*',
-					    'keep *_*_piZeroRejectCand_*',
+                                            'keep *_ChiCandProducer_chicand_*',
+					    'keep *_ChiCandProducer_piZeroRejectCand_*',
+                                            'keep *_ChiCandProducer_chicCompCandRefit1s_*',
+                                            'keep *_ChiCandProducer_chicCompCandRefit2s_*',
+                                            'keep *_ChiCandProducer_chicCompCandRefit3s_*'
                                             ),
     )
 
@@ -128,7 +147,8 @@ process.out = cms.OutputModule(
 
 process.load('PhysicsTools.PatAlgos.producersLayer1.muonProducer_cfi')
 
-process.dimuonpath = cms.Path(process.patMuons*   #create PAT muons
+process.dimuonpath = cms.Path(process.triggerSelection*
+			      process.patMuons*   #create PAT muons
                               process.selMuons*   #official muon selection
                               process.dimuonProducer*     #dimuon producer
 			      process.diMuonCount*

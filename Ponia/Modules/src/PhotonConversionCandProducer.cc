@@ -59,7 +59,6 @@ namespace reco {
 PhotonConversionCandProducer:: PhotonConversionCandProducer(const edm::ParameterSet& ps){
 
   convCollection_          = ps.getParameter<edm::InputTag>("conversions");
-  diMuonCollection_        = ps.getParameter<edm::InputTag>("dimuons");
   pfPhotonCollection_      = ps.getParameter<edm::InputTag>("pfphotons");
   thePVs_                  = ps.getParameter<edm::InputTag>("primaryVertexTag");
   wantTkVtxCompatibility_  = ps.getParameter<bool>("wantTkVtxCompatibility");
@@ -83,6 +82,8 @@ PhotonConversionCandProducer:: PhotonConversionCandProducer(const edm::Parameter
   
   produces<reco::ConversionCollection>("conversions");
 
+
+  total_conversions = 0;
   selection_fail = 0;
   algo_fail = 0;
   flag_fail = 0;
@@ -90,6 +91,7 @@ PhotonConversionCandProducer:: PhotonConversionCandProducer(const edm::Parameter
   TkVtxC = 0;
   CInnerHits = 0;
   highpurity_count = 0;
+  final_conversion = 0;
 }
 
 
@@ -102,8 +104,8 @@ void PhotonConversionCandProducer::produce(edm::Event& event, const edm::EventSe
   edm::Handle<reco::ConversionCollection> pConv;
   event.getByLabel(convCollection_,pConv);
   
-  edm::Handle<pat::CompositeCandidateCollection> pDiMuons;
-  event.getByLabel(diMuonCollection_,pDiMuons);
+//  edm::Handle<pat::CompositeCandidateCollection> pDiMuons;
+//  event.getByLabel(diMuonCollection_,pDiMuons);
 
   edm::Handle<reco::PFCandidateCollection> pPFPhotons;
   event.getByLabel(pfPhotonCollection_,pPFPhotons);
@@ -111,6 +113,7 @@ void PhotonConversionCandProducer::produce(edm::Event& event, const edm::EventSe
   StringCutObjectSelector<reco::Conversion> *convSelection_ = new StringCutObjectSelector<reco::Conversion>(convSelectionCuts_);
 
   for(reco::ConversionCollection::const_iterator conv = pConv->begin(); conv != pConv->end(); ++conv){
+    total_conversions++;
 
     if (! ( *convSelection_)(*conv)){
 	selection_fail++;	
@@ -163,6 +166,7 @@ void PhotonConversionCandProducer::produce(edm::Event& event, const edm::EventSe
 
     if (flagTkVtxCompatibility && flagCompatibleInnerHits && flagHighpurity){
        	outCollection->push_back(*conv);
+	final_conversion++;
     }		     
   }
   removeDuplicates(*outCollection);
@@ -281,6 +285,7 @@ void PhotonConversionCandProducer::endJob(){
    std::cout << "###########################" << std::endl;
    std::cout << "Conversion Candidate producer report:" << std::endl;
    std::cout << "###########################" << std::endl;
+   std::cout << "Total number of examined conversions: " << total_conversions << std::endl;
    std::cout << "Selection fail candidates: " << selection_fail << std::endl;
    std::cout << "Algo fail candidates: " << algo_fail << std::endl;
    std::cout << "Quality fail candidates: " << flag_fail << std::endl;
@@ -288,6 +293,8 @@ void PhotonConversionCandProducer::endJob(){
    std::cout << "Vertex compatibility fail: " << TkVtxC << std::endl;
    std::cout << "Compatible inner hits fail: " << CInnerHits << std::endl;
    std::cout << "Highpurity Subset fail: " << highpurity_count << std::endl;
+   std::cout << "###########################" << std::endl;
+   std::cout << "Final number of conversions: " << final_conversion << std::endl;
    std::cout << "###########################" << std::endl;
 }
 //define this as a plug-in
