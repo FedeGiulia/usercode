@@ -3,7 +3,7 @@
    Declaration of ChiCandProducer
 
    \author Stefano Argiro
-   \version $Id: ChiCandProducer.h,v 1.3 2013/01/23 14:37:05 degano Exp $
+   \version $Id: ChiCandProducer.h,v 1.4 2013/02/14 09:39:39 degano Exp $
    \date 18 Dec 2012
 */
 
@@ -26,6 +26,7 @@
 #include <vector>
 
 ///For kinematic fit:
+/*
 #include <DataFormats/PatCandidates/interface/Muon.h>
 
 #include "TrackingTools/TransientTrack/interface/TransientTrackBuilder.h"
@@ -46,10 +47,10 @@
 #include "RecoVertex/KinematicFitPrimitives/interface/TransientTrackKinematicParticle.h"
 
 #include <boost/foreach.hpp>
-
+*/
 
 static const char CVSId__ChiCandProducer[] = 
-"$Id: ChiCandProducer.h,v 1.3 2013/01/23 14:37:05 degano Exp $";
+"$Id: ChiCandProducer.h,v 1.4 2013/02/14 09:39:39 degano Exp $";
 
 /**
    Create a Chi(b,c) candidate by mathing dimuon and conversion

@@ -137,9 +137,6 @@ process.out = cms.OutputModule(
 					    'keep *_*_conversions_*',
                                             'keep *_ChiCandProducer_chicand_*',
 					    'keep *_ChiCandProducer_piZeroRejectCand_*',
-                                            'keep *_ChiCandProducer_chicCompCandRefit1s_*',
-                                            'keep *_ChiCandProducer_chicCompCandRefit2s_*',
-                                            'keep *_ChiCandProducer_chicCompCandRefit3s_*'
                                             ),
     )
 
