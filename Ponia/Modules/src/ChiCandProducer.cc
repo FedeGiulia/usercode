@@ -55,7 +55,7 @@ void ChiCandProducer::produce(edm::Event& event, const edm::EventSetup& esetup){
 	   delta_mass_fail++;
 	   continue;
 	}
-    	float dz = conv->dz(dimuonCand->vertex());
+    	float dz = fabs( conv->dz(dimuonCand->vertex()) );
 	chiCand.addUserFloat("dz",dz);
 
 	if (!cutdz(dz)){
