@@ -13,7 +13,7 @@
 //
 // Original Author:  Alessandro Degano,32 1-C13,+41227678098
 //         Created:  Tue Feb 19 14:32:37 CET 2013
-// $Id$
+// $Id: RootupleChib.cc,v 1.1 2013/02/22 14:46:19 degano Exp $
 //
 //
 
@@ -81,6 +81,8 @@ class RootupleChib : public edm::EDAnalyzer {
 	Double_t Y1S_nsigma;
 	Double_t Y2S_nsigma;
 	Double_t Y3S_nsigma;
+	Double_t conv_vertex;
+	Double_t dz;
 
 	Double_t ups_mass;
 	Double_t ups_rapidity;
@@ -135,6 +137,8 @@ RootupleChib::RootupleChib(const edm::ParameterSet& iConfig):
 	chib_tree->Branch("Y1S_nsigma", &Y1S_nsigma, "Y1S_nsigma/D");
 	chib_tree->Branch("Y2S_nsigma", &Y2S_nsigma, "Y2S_nsigma/D");
 	chib_tree->Branch("Y3S_nsigma", &Y3S_nsigma, "Y3S_nsigma/D");
+	chib_tree->Branch("conv_vertex", &conv_vertex, "conv_vertex/D");
+	chib_tree->Branch("dz", &dz, "dz/D");
 
 	upsilon_tree = fs->make<TTree>("upsTree","Tree of Upsilon");
 	upsilon_tree->Branch("ups_mass", &ups_mass, "ups_mass/D");
@@ -200,6 +204,8 @@ RootupleChib::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 			ctpv = ( dynamic_cast<pat::CompositeCandidate*>(chi_cand.daughter("dimuon")) )->userFloat("ppdlPV");
 			ctpv_error = ( dynamic_cast<pat::CompositeCandidate*>(chi_cand.daughter("dimuon")) )->userFloat("ppdlErrPV");
 			pi0_abs_mass = pi0_abs_values[0];
+			conv_vertex = chi_cand.daughter("photon")->vertex().rho();
+			dz = chi_cand.userFloat("dz");
 
 			double sigma = Y_sig_par_A+Y_sig_par_B*(fabs(dimuon_rapidity)-Y_sig_par_C);
 			if (sigma < Y_sig_par_A) sigma = Y_sig_par_A;
