@@ -3,13 +3,12 @@
    Declaration of ChiCandProducer
 
    \author Stefano Argiro
-   \version $Id: ChiCandProducer.h,v 1.4 2013/02/14 09:39:39 degano Exp $
+   \version $Id: ChiCandProducer.h,v 1.5 2013/02/22 14:43:57 degano Exp $
    \date 18 Dec 2012
 */
 
 #ifndef __ChiCandProducer_h_
 #define __ChiCandProducer_h_
-
 
 #include "FWCore/Framework/interface/Frameworkfwd.h"
 #include "FWCore/Framework/interface/EDProducer.h"
@@ -25,32 +24,8 @@
 #include <TLorentzVector.h>
 #include <vector>
 
-///For kinematic fit:
-/*
-#include <DataFormats/PatCandidates/interface/Muon.h>
-
-#include "TrackingTools/TransientTrack/interface/TransientTrackBuilder.h"
-#include "TrackingTools/Records/interface/TransientTrackRecord.h"
-#include "TrackingTools/TransientTrack/interface/TransientTrack.h"
-#include "MagneticField/Engine/interface/MagneticField.h"            
-#include "CommonTools/Statistics/interface/ChiSquaredProbability.h"
-
-#include "RecoVertex/KinematicFit/interface/KinematicParticleVertexFitter.h"
-#include "RecoVertex/KinematicFitPrimitives/interface/KinematicParticleFactoryFromTransientTrack.h"
-#include "RecoVertex/KinematicFit/interface/MassKinematicConstraint.h"
-#include "RecoVertex/KinematicFit/interface/KinematicParticleFitter.h"
-#include "RecoVertex/KinematicFitPrimitives/interface/MultiTrackKinematicConstraint.h"
-#include "RecoVertex/KinematicFit/interface/KinematicConstrainedVertexFitter.h"
-#include "RecoVertex/KinematicFit/interface/TwoTrackMassKinematicConstraint.h"
-#include "RecoVertex/KinematicFitPrimitives/interface/KinematicParticle.h"
-#include "RecoVertex/KinematicFitPrimitives/interface/RefCountedKinematicParticle.h"
-#include "RecoVertex/KinematicFitPrimitives/interface/TransientTrackKinematicParticle.h"
-
-#include <boost/foreach.hpp>
-*/
-
 static const char CVSId__ChiCandProducer[] = 
-"$Id: ChiCandProducer.h,v 1.4 2013/02/14 09:39:39 degano Exp $";
+"$Id: ChiCandProducer.h,v 1.5 2013/02/22 14:43:57 degano Exp $";
 
 /**
    Create a Chi(b,c) candidate by mathing dimuon and conversion
