@@ -25,7 +25,9 @@
 #include "TrackingTools/IPTools/interface/IPTools.h"
 #include "TrackingTools/PatternTools/interface/ClosestApproachInRPhi.h"
 
-/** $Id: DiMuonCandProducer.cc,v 1.1 2013/01/15 14:58:54 degano Exp $*/
+#include "Math/Point3D.h"
+
+/** $Id: DiMuonCandProducer.cc,v 1.2 2013/01/23 14:37:05 degano Exp $*/
 
 DiMuonCandProducer::DiMuonCandProducer(const edm::ParameterSet& iConfig):
   muons_(iConfig.getParameter<edm::InputTag>("muons")),
@@ -285,6 +287,9 @@ DiMuonCandProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 	  
 	  if (addCommonVertex_) {
 	    myCand.addUserData("commonVertex",Vertex(myVertex));
+	    //Point VertexToSet(myVertex.position().x(),myVertex.position().y(),myVertex.position().z()); 
+	    myCand.setVertex(Vertex(myVertex).position()); //Set dimuon Vertex: important for computing dz otherwise bug
+	    
 	  }
 	} else {
 	  myCand.addUserFloat("vNChi2",-1);
