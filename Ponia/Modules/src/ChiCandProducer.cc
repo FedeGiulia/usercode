@@ -58,12 +58,11 @@ void ChiCandProducer::produce(edm::Event& event, const edm::EventSetup& esetup){
     	float dz = fabs( conv->dz(dimuonCand->vertex()) );
 	chiCand.addUserFloat("dz",dz);
 
-//Needs deeper understanding
-/*	if (!cutdz(dz)){
+	if (!cutdz(dz)){
 	   dz_cut_fail++;	
 	   continue;
 	}
-*/
+
 	std::vector<float> invmc= invmCombinations(*conv, pfphotons, ptr_pizero_rejected);
 	if (*ptr_pizero_rejected){
 	   pizero_fail++;
