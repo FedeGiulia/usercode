@@ -158,10 +158,11 @@ process.out = cms.OutputModule(
     fileName = cms.untracked.string('testdimuon.root'),
     outputCommands =  cms.untracked.vstring('drop *',
                                             'keep *_dimuonProducer_UpsilonCandLorentzVector_*',
-					    'keep *_*_conversions_*',
-                                            'keep *_ChiCandProducer_chicand_*',
-					    'keep *_ChiCandProducer_piZeroRejectCand_*',
-					    'keep *_ChibKinematicRefit_*_*',
+                                            'keep *_chiCandProducer_chicand_*',
+					    'keep *_chiCandProducer_piZeroRejectCand_*',
+					    'keep *_refit1S_*_*',
+					    'keep *_refit2S_*_*',
+					    'keep *_refit3S_*_*',
                                             ),
     )
 

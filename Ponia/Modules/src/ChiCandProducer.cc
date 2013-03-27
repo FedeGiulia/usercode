@@ -13,7 +13,7 @@ ChiCandProducer::ChiCandProducer(const edm::ParameterSet& ps):
   dzMax_(ps.getParameter<double>("dzmax"))
 {
   produces<pat::CompositeCandidateCollection>("chicand");
-  produces<reco::ConversionCollection>("chiConversion");
+  produces<reco::ConversionCollection>("chiConversions");
   produces<std::vector<std::vector<float> > >("piZeroRejectCand");
 
   candidates = 0;
