@@ -3,7 +3,7 @@
 ####################################################################################
 
 #debug_filename = 'debug_testAnalyzer.txt' # Name of the debug file
-input_filename = ''
+input_filename = 'file:/data1/vcogoni/CMSSW_5_3_6/store/data/Run2012A/MuOnia/AOD/13Jul2012-v1/00000/FE7159F0-33CF-E111-A303-002618FDA279.root'
 tag_dimuon = 'dimuonProducer' # Tag name of the dimuon collection as saved from process.dimuonProducer
 cut_dimuon_Mass_low = 8.5
 cut_dimuon_Mass_high = 11.0
@@ -30,7 +30,7 @@ pi0_large_max = 0.160
 chi_deltaM_min = 0.0    # This two values define the minimum and the maximum values 
 chi_deltaM_max = 2.0    # required for the QValue of the Chi candidate
 chi_dzMax = 0.5
-
+upsilon_masses = [9.4603, 10.02326, 10.3552]
 
 ############################# CONFIGURATION END ####################################
 if(pi0_small_min < pi0_large_min or pi0_small_max > pi0_large_max or pi0_small_max < pi0_small_min or pi0_large_max < pi0_large_min):
@@ -61,7 +61,7 @@ process.source = cms.Source(
     )
 
 process.maxEvents = cms.untracked.PSet(
-    input = cms.untracked.int32(-1)
+    input = cms.untracked.int32(1000)
     )
 
 process.triggerSelection = cms.EDFilter( "TriggerResultsFilter",
@@ -129,6 +129,30 @@ process.chiCandProducer = cms.EDProducer(
     dzmax       = cms.double(chi_dzMax)
     )
 
+
+
+process.refit1S = cms.EDProducer('ChibKinematicRefit',
+				 chi_cand = cms.InputTag("chiCandProducer","chicand"),
+				 conversions = cms.InputTag("chiCandProducer","chiConversions"),
+				 upsilon_mass = cms.double(upsilon_masses[0]), # GeV   1S = 9.4603   2S = 10.02326    3S = 10.3552
+				 product_name = cms.string("chiCand1S")
+				 )
+process.refit2S = cms.EDProducer('ChibKinematicRefit',
+				 chi_cand = cms.InputTag("chiCandProducer","chicand"),
+				 conversions = cms.InputTag("chiCandProducer","chiConversions"),
+				 upsilon_mass = cms.double(upsilon_masses[1]), # GeV   1S = 9.4603   2S = 10.02326    3S = 10.3552
+				 product_name = cms.string("chiCand2S")
+				 )
+process.refit3S = cms.EDProducer('ChibKinematicRefit',
+				 chi_cand = cms.InputTag("chiCandProducer","chicand"),
+				 conversions = cms.InputTag("chiCandProducer","chiConversions"),
+				 upsilon_mass = cms.double(upsilon_masses[2]), # GeV   1S = 9.4603   2S = 10.02326    3S = 10.3552
+				 product_name = cms.string("chiCand3S")
+				 )
+
+
+
+
 process.out = cms.OutputModule(
     "PoolOutputModule",
     fileName = cms.untracked.string('testdimuon.root'),
@@ -137,6 +161,7 @@ process.out = cms.OutputModule(
 					    'keep *_*_conversions_*',
                                             'keep *_ChiCandProducer_chicand_*',
 					    'keep *_ChiCandProducer_piZeroRejectCand_*',
+					    'keep *_ChibKinematicRefit_*_*',
                                             ),
     )
 
@@ -150,7 +175,11 @@ process.dimuonpath = cms.Path(process.triggerSelection*
                               process.dimuonProducer*     #dimuon producer
 			      process.diMuonCount*
 			      process.conversionProducer*
-			      process.chiCandProducer)
+			      process.chiCandProducer*
+			      process.refit1S*
+			      process.refit2S*
+			      process.refit3S
+			      )
 
 process.end        = cms.EndPath(process.out)
 
