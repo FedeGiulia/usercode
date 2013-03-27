@@ -13,6 +13,7 @@ ChiCandProducer::ChiCandProducer(const edm::ParameterSet& ps):
   dzMax_(ps.getParameter<double>("dzmax"))
 {
   produces<pat::CompositeCandidateCollection>("chicand");
+  produces<reco::ConversionCollection>("chiConversion");
   produces<std::vector<std::vector<float> > >("piZeroRejectCand");
 
   candidates = 0;
@@ -26,6 +27,7 @@ void ChiCandProducer::produce(edm::Event& event, const edm::EventSetup& esetup){
 
   std::auto_ptr<pat::CompositeCandidateCollection> chiCandColl(new pat::CompositeCandidateCollection);
   std::auto_ptr<PiZeroRejCollection> piZeroRejectCand( new PiZeroRejCollection );
+  std::auto_ptr<reco::ConversionCollection> chiConversions( new reco::ConversionCollection );
 
   bool pizero_rejected = false;
   bool* ptr_pizero_rejected;
@@ -49,7 +51,7 @@ void ChiCandProducer::produce(edm::Event& event, const edm::EventSetup& esetup){
     	*ptr_pizero_rejected = false;
 
 	pat::CompositeCandidate photonCand = makePhotonCandidate(*conv);
-	pat::CompositeCandidate chiCand = makeChiCandidate(*dimuonCand, photonCand, *conv);
+	pat::CompositeCandidate chiCand = makeChiCandidate(*dimuonCand, photonCand);
     
 	if (!cutDeltaMass(chiCand,*dimuonCand)){
 	   delta_mass_fail++;
@@ -71,10 +73,12 @@ void ChiCandProducer::produce(edm::Event& event, const edm::EventSetup& esetup){
 
 	chiCandColl->push_back(chiCand);
 	piZeroRejectCand->push_back(invmc);
+	chiConversions->push_back(*conv);
 	candidates++;    
      }
   }
   event.put(chiCandColl,"chicand");
+  event.put(chiConversions,"chiConversions");
   event.put(piZeroRejectCand,"piZeroRejectCand");
 
 }
@@ -122,14 +126,12 @@ ChiCandProducer::makePhotonCandidate(const reco::Conversion& conv){
 
 const pat::CompositeCandidate 
 ChiCandProducer::makeChiCandidate(const pat::CompositeCandidate& dimuon, 
-				  const pat::CompositeCandidate& photon,
-				  const reco::Conversion& conv){
+				  const pat::CompositeCandidate& photon){
   
   pat::CompositeCandidate chiCand;
   chiCand.addDaughter(dimuon,"dimuon");
   chiCand.addDaughter(photon,"photon");
   chiCand.setVertex(dimuon.vertex());
-  chiCand.addUserData("ChiConversion", conv);
   
   reco::Candidate::LorentzVector vChic = dimuon.p4() + photon.p4();
   chiCand.setP4(vChic);

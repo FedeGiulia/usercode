@@ -3,7 +3,7 @@
    Declaration of ChiCandProducer
 
    \author Stefano Argiro
-   \version $Id: ChiCandProducer.h,v 1.6 2013/03/25 09:19:24 degano Exp $
+   \version $Id: ChiCandProducer.h,v 1.7 2013/03/27 13:28:47 degano Exp $
    \date 18 Dec 2012
 */
 
@@ -25,7 +25,7 @@
 #include <vector>
 
 static const char CVSId__ChiCandProducer[] = 
-"$Id: ChiCandProducer.h,v 1.6 2013/03/25 09:19:24 degano Exp $";
+"$Id: ChiCandProducer.h,v 1.7 2013/03/27 13:28:47 degano Exp $";
 
 /**
    Create a Chi(b,c) candidate by mathing dimuon and conversion
@@ -55,8 +55,7 @@ class ChiCandProducer : public edm::EDProducer {
   const pat::CompositeCandidate makePhotonCandidate(const reco::Conversion& conv);
 
   const pat::CompositeCandidate makeChiCandidate(const pat::CompositeCandidate& dimuon, 
-						 const pat::CompositeCandidate& photon,
-						 const reco::Conversion& conv);
+						 const pat::CompositeCandidate& photon);
 
   // check if the mass difference is in desired range
   bool cutDeltaMass(const pat::CompositeCandidate& chiCand,
