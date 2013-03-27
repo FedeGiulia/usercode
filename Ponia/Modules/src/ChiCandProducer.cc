@@ -49,7 +49,7 @@ void ChiCandProducer::produce(edm::Event& event, const edm::EventSetup& esetup){
     	*ptr_pizero_rejected = false;
 
 	pat::CompositeCandidate photonCand = makePhotonCandidate(*conv);
-	pat::CompositeCandidate chiCand = makeChiCandidate(*dimuonCand,photonCand);
+	pat::CompositeCandidate chiCand = makeChiCandidate(*dimuonCand, photonCand, *conv);
     
 	if (!cutDeltaMass(chiCand,*dimuonCand)){
 	   delta_mass_fail++;
@@ -114,18 +114,22 @@ ChiCandProducer::makePhotonCandidate(const reco::Conversion& conv){
   photonCand.setVertex(conv.conversionVertex().position());
 
   // todo: add electrons as daughters
+  // for the time being we save conversions as userData of the ChiCand,
+  // as usefull for the kinematicRefit
 
   return photonCand;
 }
 
 const pat::CompositeCandidate 
 ChiCandProducer::makeChiCandidate(const pat::CompositeCandidate& dimuon, 
-				  const pat::CompositeCandidate& photon){
+				  const pat::CompositeCandidate& photon,
+				  const reco::Conversion& conv){
   
   pat::CompositeCandidate chiCand;
   chiCand.addDaughter(dimuon,"dimuon");
   chiCand.addDaughter(photon,"photon");
   chiCand.setVertex(dimuon.vertex());
+  chiCand.addUserData("ChiConversion", conv);
   
   reco::Candidate::LorentzVector vChic = dimuon.p4() + photon.p4();
   chiCand.setP4(vChic);
