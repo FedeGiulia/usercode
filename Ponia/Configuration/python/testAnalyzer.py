@@ -51,10 +51,10 @@ process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
 process.GlobalTag.globaltag = cms.string('GR_E_V31::All')
 
 process.options   = cms.untracked.PSet( wantSummary = cms.untracked.bool(True) )
-
+process.MessageLogger.cerr.FwkReport.reportEvery = 500
 #process.MessageLogger.destinations = cms.untracked.vstring(debug_filename)
-process.MessageLogger.cout = process.MessageLogger.cerr
-process.MessageLogger.cout.threshold = cms.untracked.string("DEBUG")
+#process.MessageLogger.cout = process.MessageLogger.cerr
+#process.MessageLogger.cout.threshold = cms.untracked.string("DEBUG")
 
 process.source = cms.Source(
     "PoolSource",
@@ -159,6 +159,7 @@ process.out = cms.OutputModule(
     "PoolOutputModule",
     fileName = cms.untracked.string('testdimuon.root'),
     outputCommands =  cms.untracked.vstring('drop *',
+					    'keep *_offlinePrimaryVertices_*_*',
                                             'keep *_dimuonProducer_UpsilonCandLorentzVector_*',
                                             'keep *_chiCandProducer_chicand_*',
 					    'keep *_chiCandProducer_piZeroRejectCand_*',

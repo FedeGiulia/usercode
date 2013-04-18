@@ -13,7 +13,7 @@
 //
 // Original Author:  Giulio Dujany
 //         Created:  Tue Mar 26 14:51:59 CET 2013
-// $Id$
+// $Id: ChibKinematicRefit.cc,v 1.1 2013/03/27 15:51:24 gdujany Exp $
 //
 //
 
@@ -33,7 +33,7 @@
 ///For kinematic fit:
 #include <DataFormats/PatCandidates/interface/Muon.h>
 #include <DataFormats/EgammaCandidates/interface/Conversion.h>
-#include <DataFormats/PatCandidates/interface/CompositeCandidate.h> // GD aggiunto questo include
+#include <DataFormats/PatCandidates/interface/CompositeCandidate.h> 
 
 #include "TrackingTools/TransientTrack/interface/TransientTrackBuilder.h"
 #include "TrackingTools/Records/interface/TransientTrackRecord.h"
@@ -143,7 +143,7 @@ ChibKinematicRefit::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
   // Kinematic fit
   
   edm::ESHandle<TransientTrackBuilder> theB; 
-  iSetup.get<TransientTrackRecord>().get("TransientTrackBuilder",theB); //GD esetup -> iSetup
+  iSetup.get<TransientTrackRecord>().get("TransientTrackBuilder",theB); 
   
   int indexConversion=-1;
   
@@ -233,7 +233,7 @@ ChibKinematicRefit::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 		  RefCountedKinematicVertex ChiBDecayVertex = ChiBTree->currentDecayVertex();
 		  
 		  if (fitChiB->currentState().isValid()) 
-		    {          
+		    { //Get chib         
 		      float ChiBM_fit = fitChiB->currentState().mass();
 		      float ChiBPx_fit = fitChiB->currentState().kinematicParameters().momentum().x();
 		      float ChiBPy_fit = fitChiB->currentState().kinematicParameters().momentum().y();
@@ -243,12 +243,60 @@ ChibKinematicRefit::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 		      float ChiBVtxZ_fit = ChiBDecayVertex->position().z();
 		      float ChiBVtxP_fit=ChiSquaredProbability((double)(ChiBDecayVertex->chiSquared()),(double)(ChiBDecayVertex->degreesOfFreedom()));
 		      
-		      reco::CompositeCandidate aChicCandRefit(0,math::XYZTLorentzVector(ChiBPx_fit,ChiBPy_fit,ChiBPz_fit,sqrt(ChiBM_fit*ChiBM_fit+ChiBPx_fit*ChiBPx_fit+ChiBPy_fit*ChiBPy_fit+ChiBPz_fit*ChiBPz_fit)),math::XYZPoint(ChiBVtxX_fit,ChiBVtxY_fit,ChiBVtxZ_fit),50551);
+		      reco::CompositeCandidate recoChib(0,math::XYZTLorentzVector(ChiBPx_fit,ChiBPy_fit,ChiBPz_fit,sqrt(ChiBM_fit*ChiBM_fit+ChiBPx_fit*ChiBPx_fit+ChiBPy_fit*ChiBPy_fit+ChiBPz_fit*ChiBPz_fit)),math::XYZPoint(ChiBVtxX_fit,ChiBVtxY_fit,ChiBVtxZ_fit),50551);
 		      
-		      pat::CompositeCandidate patChicCandRefit(aChicCandRefit);
-		      patChicCandRefit.addUserFloat("vProb",ChiBVtxP_fit);
-		      chicCompCandRefitColl->push_back(patChicCandRefit);
+		      pat::CompositeCandidate patChib(recoChib);
+		      patChib.addUserFloat("vProb",ChiBVtxP_fit);
+
+		      //get first muon
+		      bool child = ChiBTree->movePointerToTheFirstChild();
+		      RefCountedKinematicParticle fitMu1 = ChiBTree->currentParticle();
+		      if(!child) break;
+				   
+		      float mu1M_fit = fitMu1->currentState().mass();
+		      float mu1Px_fit = fitMu1->currentState().kinematicParameters().momentum().x();
+		      float mu1Py_fit = fitMu1->currentState().kinematicParameters().momentum().y();
+		      float mu1Pz_fit = fitMu1->currentState().kinematicParameters().momentum().z();
+		      reco::CompositeCandidate recoMu1(0,math::XYZTLorentzVector(mu1Px_fit,mu1Py_fit,mu1Pz_fit,sqrt(mu1M_fit*mu1M_fit+mu1Px_fit*mu1Px_fit+mu1Py_fit*mu1Py_fit+mu1Pz_fit*mu1Pz_fit)),math::XYZPoint(ChiBVtxX_fit,ChiBVtxY_fit,ChiBVtxZ_fit),13);
+		      pat::CompositeCandidate patMu1(recoMu1);
 		      
+		      
+		      //get second muon
+		      child = ChiBTree->movePointerToTheNextChild();
+		      RefCountedKinematicParticle fitMu2 = ChiBTree->currentParticle();
+		      if(!child) break;
+
+		      float mu2M_fit = fitMu2->currentState().mass();
+		      float mu2Px_fit = fitMu2->currentState().kinematicParameters().momentum().x();
+		      float mu2Py_fit = fitMu2->currentState().kinematicParameters().momentum().y();
+		      float mu2Pz_fit = fitMu2->currentState().kinematicParameters().momentum().z();
+		      reco::CompositeCandidate recoMu2(0,math::XYZTLorentzVector(mu2Px_fit,mu2Py_fit,mu2Pz_fit,sqrt(mu2M_fit*mu2M_fit+mu2Px_fit*mu2Px_fit+mu2Py_fit*mu2Py_fit+mu2Pz_fit*mu2Pz_fit)),math::XYZPoint(ChiBVtxX_fit,ChiBVtxY_fit,ChiBVtxZ_fit),13);
+		      pat::CompositeCandidate patMu2(recoMu2);
+		      		  
+    
+		      //Define Upsilon from two muons
+		      pat::CompositeCandidate ups;
+		      ups.addDaughter(patMu1, "muon1");
+		      ups.addDaughter(patMu2,"muon2");	
+		      ups.setP4(patMu1.p4()+patMu2.p4());
+		  
+
+		      //get photon
+		      child = ChiBTree->movePointerToTheNextChild();
+		      RefCountedKinematicParticle fitGamma = ChiBTree->currentParticle();
+		      if(!child) break;
+		      
+		      float gammaM_fit = fitGamma->currentState().mass();
+		      float gammaPx_fit = fitGamma->currentState().kinematicParameters().momentum().x();
+		      float gammaPy_fit = fitGamma->currentState().kinematicParameters().momentum().y();
+		      float gammaPz_fit = fitGamma->currentState().kinematicParameters().momentum().z();
+		      reco::CompositeCandidate recoGamma(0,math::XYZTLorentzVector(gammaPx_fit,gammaPy_fit,gammaPz_fit,sqrt(gammaM_fit*gammaM_fit+gammaPx_fit*gammaPx_fit+gammaPy_fit*gammaPy_fit+gammaPz_fit*gammaPz_fit)),math::XYZPoint(ChiBVtxX_fit,ChiBVtxY_fit,ChiBVtxZ_fit),13);
+		      pat::CompositeCandidate patGamma(recoGamma);
+
+		      patChib.addDaughter(ups,"dimuon");
+		      patChib.addDaughter(patGamma,"photon");
+
+		      chicCompCandRefitColl->push_back(patChib);
 		    }
 		}
 	    }
@@ -256,7 +304,7 @@ ChibKinematicRefit::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
     }  
   // End kinematic fit
   
-  iEvent.put(chicCompCandRefitColl,product_name_); //GD event -> iEvent
+  iEvent.put(chicCompCandRefitColl,product_name_); 
   
 }
 
