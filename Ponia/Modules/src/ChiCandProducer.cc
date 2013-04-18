@@ -7,6 +7,7 @@ ChiCandProducer::ChiCandProducer(const edm::ParameterSet& ps):
   convCollection_(ps.getParameter<edm::InputTag>("conversions")),
   diMuonCollection_(ps.getParameter<edm::InputTag>("dimuons")),
   pfCandidateCollection_(ps.getParameter<edm::InputTag>("pfcandidates")),
+  pi0OnlineSwitch_(ps.getParameter<bool>("pi0OnlineSwitch")),
   pi0SmallWindow_(ps.getParameter<std::vector<double> >("pi0SmallWindow")),
   pi0LargeWindow_(ps.getParameter<std::vector<double> >("pi0LargeWindow")),
   deltaMass_(ps.getParameter<std::vector<double> >("deltaMass")),
@@ -66,7 +67,7 @@ void ChiCandProducer::produce(edm::Event& event, const edm::EventSetup& esetup){
 	}
 
 	std::vector<float> invmc= invmCombinations(*conv, pfphotons, ptr_pizero_rejected);
-	if (*ptr_pizero_rejected){
+	if (*ptr_pizero_rejected && pi0OnlineSwitch_){
 	   pizero_fail++;
 	   continue;
 	}

@@ -3,7 +3,7 @@
    Declaration of ChiCandProducer
 
    \author Stefano Argiro
-   \version $Id: ChiCandProducer.h,v 1.7 2013/03/27 13:28:47 degano Exp $
+   \version $Id: ChiCandProducer.h,v 1.8 2013/03/27 15:34:08 degano Exp $
    \date 18 Dec 2012
 */
 
@@ -25,7 +25,7 @@
 #include <vector>
 
 static const char CVSId__ChiCandProducer[] = 
-"$Id: ChiCandProducer.h,v 1.7 2013/03/27 13:28:47 degano Exp $";
+"$Id: ChiCandProducer.h,v 1.8 2013/03/27 15:34:08 degano Exp $";
 
 /**
    Create a Chi(b,c) candidate by mathing dimuon and conversion
@@ -71,6 +71,7 @@ class ChiCandProducer : public edm::EDProducer {
 				      const reco::PFCandidateCollection& photons,
 				      bool* _pizero_rejected );
 
+  bool pi0OnlineSwitch_;
   // low and high window limits
   std::vector<double> pi0SmallWindow_;
   std::vector<double> pi0LargeWindow_;
