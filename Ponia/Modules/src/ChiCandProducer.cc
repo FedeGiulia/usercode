@@ -67,7 +67,7 @@ void ChiCandProducer::produce(edm::Event& event, const edm::EventSetup& esetup){
 	}
 
 	std::vector<float> invmc= invmCombinations(*conv, pfphotons, ptr_pizero_rejected);
-	if (*ptr_pizero_rejected && pi0OnlineSwitch_){
+	if (*ptr_pizero_rejected){
 	   pizero_fail++;
 	   continue;
 	}
@@ -178,7 +178,7 @@ ChiCandProducer::invmCombinations(const reco::Conversion& conv,
        photon!=photons.end(); ++photon){
     
     float inv = (conv.refittedPair4Momentum() + photon->p4()).M(); 
-    if (inv > small1 && inv < small2){
+    if (inv > small1 && inv < small2 && pi0OnlineSwitch_){
        *_pizero_rejected = true;
        return ret;
     }else if(inv > large1 && inv < large2){
