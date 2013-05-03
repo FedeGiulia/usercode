@@ -59,7 +59,6 @@ namespace reco {
 PhotonConversionCandProducer:: PhotonConversionCandProducer(const edm::ParameterSet& ps){
 
   convCollection_          = ps.getParameter<edm::InputTag>("conversions");
-  pfPhotonCollection_      = ps.getParameter<edm::InputTag>("pfphotons");
   thePVs_                  = ps.getParameter<edm::InputTag>("primaryVertexTag");
   wantTkVtxCompatibility_  = ps.getParameter<bool>("wantTkVtxCompatibility");
   sigmaTkVtxComp_          = ps.getParameter<uint32_t>("sigmaTkVtxComp");
@@ -107,9 +106,7 @@ void PhotonConversionCandProducer::produce(edm::Event& event, const edm::EventSe
 //  edm::Handle<pat::CompositeCandidateCollection> pDiMuons;
 //  event.getByLabel(diMuonCollection_,pDiMuons);
 
-  edm::Handle<reco::PFCandidateCollection> pPFPhotons;
-  event.getByLabel(pfPhotonCollection_,pPFPhotons);
-
+  
   StringCutObjectSelector<reco::Conversion> *convSelection_ = new StringCutObjectSelector<reco::Conversion>(convSelectionCuts_);
 
   for(reco::ConversionCollection::const_iterator conv = pConv->begin(); conv != pConv->end(); ++conv){
