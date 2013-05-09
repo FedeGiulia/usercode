@@ -33,20 +33,6 @@ upsilon_masses = [9.4603, 10.02326, 10.3552]
 
 ############################# CONFIGURATION END ####################################
 
-triggerSelection = cms.EDFilter( "TriggerResultsFilter",
-    triggerConditions = cms.vstring(
-      'HLT_Dimuon5_Upsilon_v3',
-      'HLT_Dimuon7_Upsilon_v3',
-      'HLT_Dimuon8_Upsilon_v3',
-      'HLT_Dimuon11_Upsilon_v3',
-),
-    hltResults = cms.InputTag( "TriggerResults", "", "HLT" ),
-    l1tResults = cms.InputTag( "gtDigis" ),
-    l1tIgnoreMask = cms.bool( False ),
-    l1techIgnorePrescales = cms.bool( False ),
-    daqPartitions = cms.uint32( 1 ),
-    throw = cms.bool( True )
-)
 
 from PhysicsTools.PatAlgos.producersLayer1.muonProducer_cfi import patMuons
 
@@ -121,15 +107,16 @@ refit3S = cms.EDProducer('ChibKinematicRefit',
 				 product_name = cms.string("chiCand3S")
 				 )
 
+chibSequence = cms.Sequence(patMuons*   #create PAT muons
+                            selMuons*   #official muon selection
+                            dimuonProducer*     #dimuon producer
+                            diMuonCount*
+                            conversionProducer*
+                            chiCandProducer*
+                            refit1S*
+                            refit2S*
+                            refit3S)
+                            
 
-chiPath = cms.Path(triggerSelection*
-			      patMuons*   #create PAT muons
-                              selMuons*   #official muon selection
-                              dimuonProducer*     #dimuon producer
-			      diMuonCount*
-			      conversionProducer*
-			      chiCandProducer*
-			      refit1S*
-			      refit2S*
-			      refit3S
-			      )
+
+

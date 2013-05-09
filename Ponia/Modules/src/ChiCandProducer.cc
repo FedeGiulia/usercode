@@ -118,8 +118,27 @@ ChiCandProducer::makePhotonCandidate(const reco::Conversion& conv){
   photonCand.setP4(convertVector(conv.refittedPair4Momentum()));
   photonCand.setVertex(conv.conversionVertex().position());
 
-  // todo: add electrons as daughters
-  // for the time being we save conversions as userData of the ChiCand,
+  //add electrons as daughters (composite candidate with only momentum information)
+  pat::CompositeCandidate ele1, ele2;
+  double mass_ele = 0.000511; //GeV
+
+  math::XYZVector mom_ele1 = conv.tracks()[0]->momentum();
+  double E_ele1 = sqrt(mass_ele*mass_ele + mom_ele1.Mag2());
+  math::XYZTLorentzVector p4_ele1 = math::XYZTLorentzVector(mom_ele1.X(),mom_ele1.Y(),mom_ele1.Z(),E_ele1);
+  ele1.setP4(p4_ele1);
+  ele1.setVertex(conv.conversionVertex().position());
+  
+  math::XYZVector mom_ele2 = conv.tracks()[1]->momentum();
+  double E_ele2 = sqrt(mass_ele*mass_ele + mom_ele2.Mag2());
+  math::XYZTLorentzVector p4_ele2 = math::XYZTLorentzVector(mom_ele2.X(),mom_ele2.Y(),mom_ele2.Z(),E_ele2);
+  ele2.setP4(p4_ele2);
+  ele2.setVertex(conv.conversionVertex().position());
+  
+  photonCand.addDaughter(ele1,"ele1");
+  photonCand.addDaughter(ele2,"ele2");
+
+
+  // we also save conversions as userData of the ChiCand,
   // as usefull for the kinematicRefit
 
   return photonCand;
