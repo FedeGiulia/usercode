@@ -1,8 +1,8 @@
 import FWCore.ParameterSet.Config as cms
 
 RatioChiB1 = 0.62 # 1 if only chib1, 0 if only chib2
-sel_Chib_fileName = cms.untracked.string('sel_Chib1.root')
-gen_Chib_fileName = cms.untracked.string('gen_Chib1.root')
+sel_Chib_fileName = cms.untracked.string('sel_Chib.root')
+gen_Chib_fileName = cms.untracked.string('gen_Chib.root')
 
 process = cms.Process('chibSim')
 
