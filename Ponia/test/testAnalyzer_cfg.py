@@ -22,8 +22,23 @@ process.source = cms.Source(
     )
 
 process.maxEvents = cms.untracked.PSet(
-    input = cms.untracked.int32(1000)
+    input = cms.untracked.int32(100)
     )
+
+process.triggerSelection = cms.EDFilter( "TriggerResultsFilter",
+                                         triggerConditions = cms.vstring(
+        'HLT_Dimuon5_Upsilon_v*',
+        'HLT_Dimuon7_Upsilon_v*',
+        'HLT_Dimuon8_Upsilon_v*',
+        'HLT_Dimuon11_Upsilon_v*',
+        ),
+                                         hltResults = cms.InputTag( "TriggerResults", "", "HLT" ),
+                                         l1tResults = cms.InputTag( "gtDigis" ),
+                                         l1tIgnoreMask = cms.bool( False ),
+                                         l1techIgnorePrescales = cms.bool( False ),
+                                         daqPartitions = cms.uint32( 1 ),
+                                         throw = cms.bool( True )
+                                         )
 
 process.load('Ponia.Modules.chiCandProducer_cff')
 
@@ -43,7 +58,9 @@ process.out = cms.OutputModule(
 
 process.end = cms.EndPath(process.out)
 
-process.schedule = cms.Schedule(process.chiPath,process.end)
+process.p = cms.Path(process.triggerSelection*process.chibSequence)
+process.schedule = cms.Schedule(process.p,process.end)
+
 
 # HACK ! Need to understand !
 process.dimuonProducer.addMuonlessPrimaryVertex = False

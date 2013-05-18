@@ -127,12 +127,14 @@ ChiCandProducer::makePhotonCandidate(const reco::Conversion& conv){
   math::XYZTLorentzVector p4_ele1 = math::XYZTLorentzVector(mom_ele1.X(),mom_ele1.Y(),mom_ele1.Z(),E_ele1);
   ele1.setP4(p4_ele1);
   ele1.setVertex(conv.conversionVertex().position());
+  ele1.setCharge(conv.tracks()[0]->charge());
   
   math::XYZVector mom_ele2 = conv.tracks()[1]->momentum();
   double E_ele2 = sqrt(mass_ele*mass_ele + mom_ele2.Mag2());
   math::XYZTLorentzVector p4_ele2 = math::XYZTLorentzVector(mom_ele2.X(),mom_ele2.Y(),mom_ele2.Z(),E_ele2);
   ele2.setP4(p4_ele2);
   ele2.setVertex(conv.conversionVertex().position());
+  ele2.setCharge(conv.tracks()[1]->charge());
   
   photonCand.addDaughter(ele1,"ele1");
   photonCand.addDaughter(ele2,"ele2");
