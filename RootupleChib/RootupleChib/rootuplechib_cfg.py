@@ -1,4 +1,6 @@
 import FWCore.ParameterSet.Config as cms
+import os
+import fnmatch
 
 process = cms.Process("Rootuple")
 
@@ -7,25 +9,31 @@ process = cms.Process("Rootuple")
 #process.MessageLogger.cout = process.MessageLogger.cerr
 #process.MessageLogger.cout.threshold = cms.untracked.string("INFO")
 
-from filelist import inputfiles
-
 process.maxEvents = cms.untracked.PSet(
-    input = cms.untracked.int32(200)
+    input = cms.untracked.int32(-1)
 )
 
+
+# input dir
+#dir = '/data1/gdujany/chiB/CMSSW_5_3_3/src/SimChiB/crab/ChiB_1P_12_UpsilonPt_10M/res/'
+dir = '/data1/gdujany/chiB/CMSSW_5_3_3/src/2012TotalData/chib-Run2012A1/res/'
+
+inputfiles = []
+for file in os.listdir(dir):
+    if fnmatch.fnmatch(file, 'testdimuon*.root'):
+        filename = 'file:'+dir+str(file)
+        inputfiles.append(filename)
+inputfiles = inputfiles[:1]
+        
 process.source = cms.Source("PoolSource",
     	fileNames = cms.untracked.vstring( inputfiles )
 )
 process.TFileService = cms.Service("TFileService", 
-#	fileName = cms.string("/data1/degano/storage/ChiB/RooTuples/2012_ALL/2012_ALL_pi0Fixed.root"),
-	fileName = cms.string("test_Y_sigmas.root"),
+	fileName = cms.string("ChiB_1P_12_UpsilonPt.root"),
 	closeFileFast = cms.untracked.bool(True)
 )
 
-process.rootuple = cms.EDAnalyzer('RootupleChib',
-	chi_cand = cms.InputTag("chiCandProducer","chicand"),
-	pi0_comb = cms.InputTag("chiCandProducer", "piZeroRejectCand"),
-	ups_cand = cms.InputTag("dimuonProducer", "UpsilonCandLorentzVector")
-)
+process.load('RootupleChib.RootupleChib.rootuplechib_cfi')
+#rootuple.isMC = True
 
 process.p = cms.Path(process.rootuple)

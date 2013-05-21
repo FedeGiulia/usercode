@@ -35,9 +35,14 @@
 
 #include "DataFormats/PatCandidates/interface/CompositeCandidate.h"
 
+#include "DataFormats/HepMCCandidate/interface/GenParticle.h"
+#include "DataFormats/HepMCCandidate/interface/GenParticleFwd.h"
+
 #include "TLorentzVector.h"
 #include "TTree.h"
 #include <vector>
+
+#include "DataFormats/VertexReco/interface/Vertex.h"
 
 //
 // class declaration
@@ -60,39 +65,78 @@ class RootupleChib : public edm::EDAnalyzer {
       virtual void endRun(edm::Run const&, edm::EventSetup const&);
       virtual void beginLuminosityBlock(edm::LuminosityBlock const&, edm::EventSetup const&);
       virtual void endLuminosityBlock(edm::LuminosityBlock const&, edm::EventSetup const&);
+  
+  // ----------member data ---------------------------
+  std::string file_name;
+  edm::InputTag chi_cand_Label;
+  edm::InputTag pi0_comb_Label;
+  edm::InputTag ups_Label;
+  edm::InputTag refit1S_Label;
+  edm::InputTag refit2S_Label;
+  edm::InputTag refit3S_Label;
+  edm::InputTag primaryVertices_Label;
+  bool isMC_;
+  
+  Double_t invm1S;
+  Double_t invm2S;
+  Double_t invm3S;
+  Double_t chib_mass;
+  Double_t chib_pt;
+  Double_t chib_eta;
+  Double_t chib_phi;
+  Double_t dimuon_mass;
+  Double_t dimuon_rapidity;
+  Double_t dimuon_pt;
+  Double_t photon_eta;
+  Double_t photon_pt;
+  Double_t ele_lowerPt_pt;
+  Double_t ele_higherPt_pt;
+  Double_t ctpv;
+  Double_t ctpv_error;
+  Double_t pi0_abs_mass;
+  Double_t Y1S_nsigma;
+  Double_t Y2S_nsigma;
+  Double_t Y3S_nsigma;
+  Double_t conv_vertex;
+  Double_t dz;
+  Double_t numPrimaryVertices;
+  
 
-      // ----------member data ---------------------------
-	std::string file_name;
-	edm::InputTag chi_cand_Label;
-	edm::InputTag pi0_comb_Label;
-	edm::InputTag ups_Label;
+  Double_t rf1S_chib_mass;
+  Double_t probFit1S;
+  Double_t rf1S_chib_pt;
+  Double_t rf1S_chib_eta;
+  Double_t rf1S_dimuon_mass;
+  Double_t rf1S_dimuon_rapidity;
+  Double_t rf1S_dimuon_pt;
+  Double_t rf1S_photon_eta;
+  Double_t rf1S_photon_pt;
 
-	Double_t invm1S;
-	Double_t invm2S;
-	Double_t invm3S;
-	Double_t dimuon_mass;
-	Double_t dimuon_rapidity;
-	Double_t dimuon_pt;
-	Double_t photon_eta;
-	Double_t photon_pt;
-	Double_t ctpv;
-	Double_t ctpv_error;
-	Double_t pi0_abs_mass;
-	Double_t Y1S_nsigma;
-	Double_t Y2S_nsigma;
-	Double_t Y3S_nsigma;
-	Double_t conv_vertex;
-	Double_t dz;
+  Double_t rf2S_chib_mass;
+  Double_t probFit2S;
+  Double_t rf3S_chib_mass;
+  Double_t probFit3S;
 
-	Double_t ups_mass;
-	Double_t ups_rapidity;
-	Double_t ups_pt;
+  
+  Double_t ups_mass;
+  Double_t ups_rapidity;
+  Double_t ups_pt;
+  
+  TTree* chib_tree;
+  TTree* upsilon_tree;
+  TLorentzVector lorVect;
+  
+  TLorentzVector chib_p4;
+  Int_t chib_pdgId;
+  TLorentzVector Upsilon_p4;
+  Int_t Upsilon_pdgId;
+  TLorentzVector photon_p4;
+  TLorentzVector muP_p4;
+  TLorentzVector muM_p4;
 
-	TTree* chib_tree;
-	TTree* upsilon_tree;
-	TLorentzVector lorVect;
-
+ 
 };
+
 
 //
 // constants, enums and typedefs
@@ -117,7 +161,12 @@ static const double Y_sig_par_C = 0.22;
 RootupleChib::RootupleChib(const edm::ParameterSet& iConfig):
 	chi_cand_Label(iConfig.getParameter<edm::InputTag>("chi_cand")),
 	pi0_comb_Label(iConfig.getParameter<edm::InputTag>("pi0_comb")),
-	ups_Label(iConfig.getParameter<edm::InputTag>("ups_cand"))
+	ups_Label(iConfig.getParameter<edm::InputTag>("ups_cand")),
+	refit1S_Label(iConfig.getParameter<edm::InputTag>("refit1S")),
+	refit2S_Label(iConfig.getParameter<edm::InputTag>("refit2S")),
+	refit3S_Label(iConfig.getParameter<edm::InputTag>("refit3S")),
+	primaryVertices_Label(iConfig.getParameter<edm::InputTag>("primaryVertices")),
+	isMC_(iConfig.getParameter<bool>("isMC"))
 {
 	edm::Service<TFileService> fs;
 	chib_tree = fs->make<TTree>("chibTree","Tree of chib");
@@ -125,12 +174,18 @@ RootupleChib::RootupleChib(const edm::ParameterSet& iConfig):
 	chib_tree->Branch("invm1S", &invm1S, "invm1S/D");
 	chib_tree->Branch("invm2S", &invm2S, "invm2S/D");
 	chib_tree->Branch("invm3S", &invm3S, "invm3S/D");
+	chib_tree->Branch("chib_mass", &chib_mass, "chib_mass/D");
+	chib_tree->Branch("chib_pt", &chib_pt, "chib_pt/D");
+	chib_tree->Branch("chib_eta", &chib_eta, "chib_eta/D");
+	chib_tree->Branch("chib_phi", &chib_phi, "chib_phi/D");
 	chib_tree->Branch("dimuon_mass", &dimuon_mass, "dimuon_mass/D");
 	chib_tree->Branch("dimuon_rapidity", &dimuon_rapidity, "dimuon_rapidity/D");
 	chib_tree->Branch("dimuon_pt", &dimuon_pt, "dimuon_pt/D");
 	chib_tree->Branch("dimuon_pt", &dimuon_pt, "dimuon_pt/D");
 	chib_tree->Branch("photon_eta", &photon_eta, "photon_eta/D");
 	chib_tree->Branch("photon_pt", &photon_pt, "photon_pt/D");
+	chib_tree->Branch("ele_lowerPt_pt", &ele_lowerPt_pt, "ele_lowerPt_pt/D");
+	chib_tree->Branch("ele_higherPt_pt", &ele_higherPt_pt, "ele_higherPt_pt/D");
 	chib_tree->Branch("ctpv", &ctpv, "ctpv/D");
 	chib_tree->Branch("ctpv_error", &ctpv_error, "ctpv_error/D");
 	chib_tree->Branch("pi0_abs_mass", &pi0_abs_mass, "pi0_abs_mass/D");
@@ -139,6 +194,32 @@ RootupleChib::RootupleChib(const edm::ParameterSet& iConfig):
 	chib_tree->Branch("Y3S_nsigma", &Y3S_nsigma, "Y3S_nsigma/D");
 	chib_tree->Branch("conv_vertex", &conv_vertex, "conv_vertex/D");
 	chib_tree->Branch("dz", &dz, "dz/D");
+	chib_tree->Branch("numPrimaryVertices", &numPrimaryVertices, "numPrimaryVertices/D");
+	chib_tree->Branch("rf1S_chib_mass", &rf1S_chib_mass, "rf1S_chib_mass/D");
+	chib_tree->Branch("probFit1S", &probFit1S, "probFit1S/D");
+	chib_tree->Branch("rf1S_chib_pt", &rf1S_chib_pt, "rf1S_chib_pt/D");
+	chib_tree->Branch("rf1S_chib_eta", &rf1S_chib_eta, "rf1S_chib_eta/D");
+	chib_tree->Branch("rf1S_dimuon_mass", &rf1S_dimuon_mass, "rf1S_dimuon_mass/D");
+	chib_tree->Branch("rf1S_dimuon_rapidity", &rf1S_dimuon_rapidity, "rf1S_dimuon_rapidity/D");
+	chib_tree->Branch("rf1S_dimuon_pt", &rf1S_dimuon_pt, "rf1S_dimuon_pt/D");
+	chib_tree->Branch("rf1S_dimuon_pt", &rf1S_dimuon_pt, "rf1S_dimuon_pt/D");
+	chib_tree->Branch("rf1S_photon_eta", &rf1S_photon_eta, "rf1S_photon_eta/D");
+	chib_tree->Branch("rf1S_photon_pt", &rf1S_photon_pt, "rf1S_photon_pt/D");
+	chib_tree->Branch("rf2S_chib_mass", &rf2S_chib_mass, "rf2S_chib_mass/D");
+	chib_tree->Branch("probFit2S", &probFit2S, "probFit2S/D");
+        chib_tree->Branch("rf3S_chib_mass", &rf3S_chib_mass, "rf3S_chib_mass/D");
+	chib_tree->Branch("probFit3S", &probFit3S, "probFit3S/D");
+
+	if(isMC_)
+	  {
+	    chib_tree->Branch("chib_p4", "TLorentzVector", &chib_p4);
+	    chib_tree->Branch("chib_pdgId", &chib_pdgId, "chib_pdgId/I");
+	    chib_tree->Branch("Upsilon_p4", "TLorentzVector", &Upsilon_p4);
+	    chib_tree->Branch("Upsilon_pdgId", &Upsilon_pdgId, "Upsilon_pdgId/I");
+	    chib_tree->Branch("photon_p4", "TLorentzVector", &photon_p4);
+	    chib_tree->Branch("muP_p4", "TLorentzVector", &muP_p4);
+	    chib_tree->Branch("muM_p4", "TLorentzVector", &muM_p4);
+	  }
 
 	upsilon_tree = fs->make<TTree>("upsTree","Tree of Upsilon");
 	upsilon_tree->Branch("ups_mass", &ups_mass, "ups_mass/D");
@@ -171,16 +252,82 @@ RootupleChib::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	Handle<std::vector<std::vector<float > > > ups_hand;
 	iEvent.getByLabel(ups_Label, ups_hand);
 
+	Handle<std::vector<pat::CompositeCandidate> > refit1S_handle;
+	iEvent.getByLabel(refit1S_Label, refit1S_handle);
+
+	Handle<std::vector<pat::CompositeCandidate> > refit2S_handle;
+	iEvent.getByLabel(refit2S_Label, refit2S_handle);
+
+	Handle<std::vector<pat::CompositeCandidate> > refit3S_handle;
+	iEvent.getByLabel(refit3S_Label, refit3S_handle);
+
+	Handle<std::vector<reco::Vertex > > primaryVertices_handle;
+	iEvent.getByLabel(primaryVertices_Label, primaryVertices_handle);
+
+	numPrimaryVertices = primaryVertices_handle->size();
+
 	std::vector<double> pi0_abs_values;
 	pat::CompositeCandidate chi_cand;
+	pat::CompositeCandidate refit1S;
+	pat::CompositeCandidate refit2S;
+	pat::CompositeCandidate refit3S;
 	std::vector<float > pi0_comb;
 
 	double QValue = 0.0;
 
-	if(chi_cand_handle.isValid() ){  
+	if(isMC_)
+	  {
+	    Handle<reco::GenParticleCollection> GenParticles;
+	    iEvent.getByLabel("genParticles",GenParticles);   //Open GenParticles
+	    
+	    if(GenParticles.isValid() )
+	      {
+		for(reco::GenParticleCollection::const_iterator itParticle = GenParticles->begin(); itParticle != GenParticles->end(); ++itParticle)
+		  {
+		    Int_t pdgId = itParticle->pdgId();
+		    
+		    if(pdgId == 10551 || pdgId == 110551 || pdgId == 210551 || //chib0 1,2,3 P
+		       pdgId == 20553 || pdgId == 120553 || pdgId == 220553 || //chib1 1,2,3 P
+		       pdgId ==   555 || pdgId == 100555 || pdgId == 200555 )  //chib2 1,2,3 P
+		      {
+			chib_p4.SetPtEtaPhiM(itParticle->pt(),itParticle->eta(),itParticle->phi(),itParticle->mass()); 
+			chib_pdgId = pdgId; 
+			continue;
+		      }
+		    
+		    if(pdgId ==    553 || // Upsilon 1S
+		       pdgId == 100553 || // Upsilon 2S
+		       pdgId == 200553 )  // Upsilon 3S
+		      {
+			Upsilon_p4.SetPtEtaPhiM(itParticle->pt(),itParticle->eta(),itParticle->phi(),itParticle->mass()); 
+			Upsilon_pdgId = pdgId; 
+			continue;
+		      }
+		    
+		    if( pdgId == 13 ) // mu-
+		      {
+			muM_p4.SetPtEtaPhiM(itParticle->pt(),itParticle->eta(),itParticle->phi(),itParticle->mass()); 
+			continue;
+		      }
+		    
+		    if( pdgId == -13 ) // mu+
+		      {
+			muP_p4.SetPtEtaPhiM(itParticle->pt(),itParticle->eta(),itParticle->phi(),itParticle->mass()); 
+			continue;
+		      }
+		    
+		    if( pdgId == 22 ) // photon
+		      {
+			photon_p4.SetPtEtaPhiM(itParticle->pt(),itParticle->eta(),itParticle->phi(),itParticle->mass()); 
+		      }		    
+		  }
+	      }    
+	  } // end if isMC
+
+	if(chi_cand_handle.isValid() &&  refit1S_handle.isValid() && refit2S_handle.isValid() && refit3S_handle.isValid()){  
 		for(unsigned int i=0; i< chi_cand_handle->size(); i++){
 			chi_cand = chi_cand_handle->at(i);
-			
+					
 			if( pi0_comb_handle.isValid() && pi0_comb_handle->at(i).size() > 0 ){
 				pi0_comb = pi0_comb_handle->at(i);
 				for(unsigned int k=0; k< pi0_comb.size(); k++){
@@ -196,11 +343,30 @@ RootupleChib::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 			invm1S = QValue + Y1SMass;
 			invm2S = QValue + Y2SMass;
 			invm3S = QValue + Y3SMass;
+			chib_mass = chi_cand.mass();
+			chib_pt = chi_cand.pt();
+			chib_eta = chi_cand.eta();
+			chib_phi = chi_cand.phi();
 			dimuon_mass = chi_cand.daughter("dimuon")->mass();
 			dimuon_rapidity = chi_cand.daughter("dimuon")->y();
 			dimuon_pt = chi_cand.daughter("dimuon")->pt();
 			photon_eta = chi_cand.daughter("photon")->eta();
 			photon_pt = chi_cand.daughter("photon")->pt();
+			
+			Double_t ele1_pt = chi_cand.daughter("photon")->daughter("ele1")->pt();
+			Double_t ele2_pt = chi_cand.daughter("photon")->daughter("ele2")->pt();
+
+			if(ele1_pt>ele2_pt)
+			  {
+			    ele_higherPt_pt = ele1_pt;
+			    ele_lowerPt_pt = ele2_pt;
+			  }
+			else
+			  {
+			    ele_higherPt_pt = ele2_pt;
+			    ele_lowerPt_pt = ele1_pt;
+			  }
+
 			ctpv = ( dynamic_cast<pat::CompositeCandidate*>(chi_cand.daughter("dimuon")) )->userFloat("ppdlPV");
 			ctpv_error = ( dynamic_cast<pat::CompositeCandidate*>(chi_cand.daughter("dimuon")) )->userFloat("ppdlErrPV");
 			pi0_abs_mass = pi0_abs_values[0];
@@ -212,18 +378,64 @@ RootupleChib::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 			Y1S_nsigma = fabs(dimuon_mass - Y1SMass)/sigma;
 			Y2S_nsigma = fabs(dimuon_mass - Y2SMass)/sigma;
 			Y3S_nsigma = fabs(dimuon_mass - Y3SMass)/sigma;
+
+			if(i<refit1S_handle->size())
+			  {
+			    refit1S = refit1S_handle->at(i);
+			    rf1S_chib_mass = refit1S.mass(); 
+			    probFit1S = refit1S.userFloat("vProb");
+			    rf1S_chib_pt = refit1S.pt(); 
+			    rf1S_chib_eta = refit1S.eta(); 
+			    rf1S_dimuon_mass = refit1S.daughter("dimuon")->mass();
+			    rf1S_dimuon_rapidity = refit1S.daughter("dimuon")->y();
+			    rf1S_dimuon_pt = refit1S.daughter("dimuon")->pt();
+			    rf1S_photon_eta = refit1S.daughter("photon")->eta();
+			    rf1S_photon_pt = refit1S.daughter("photon")->pt();
+			  }
+			else 
+			  {
+			    rf1S_chib_mass = invm1S; 
+			    probFit1S = 0;
+			  }
+
+			if(i<refit2S_handle->size())
+			  {
+			    refit2S = refit2S_handle->at(i);
+			    rf2S_chib_mass = refit2S.mass(); 
+			    probFit2S = refit2S.userFloat("vProb");
+			  }
+			else 
+			  {
+			    rf2S_chib_mass = invm2S; 
+			    probFit2S = 0;
+			  }
+
+			if(i<refit3S_handle->size())
+			  {
+			    refit3S = refit3S_handle->at(i);
+			    rf3S_chib_mass = refit3S.mass(); 
+			    probFit3S = refit3S.userFloat("vProb");
+			  }
+			else 
+			  {
+			    rf3S_chib_mass = invm3S; 
+			    probFit3S = 0;
+			  }
+
 			chib_tree->Fill();
 		}
 	}
 	
+
+	
 	if(ups_hand.isValid() ){
-		for(unsigned int i=0; i< ups_hand->size(); i++){
-			lorVect.SetPxPyPzE(ups_hand->at(i)[0], ups_hand->at(i)[1], ups_hand->at(i)[2], ups_hand->at(i)[3]);
-			ups_mass = lorVect.M();
-			ups_rapidity = lorVect.Rapidity();
-			ups_pt = lorVect.Pt();
-			upsilon_tree->Fill();
-		}
+	  for(unsigned int i=0; i< ups_hand->size(); i++){
+	    lorVect.SetPxPyPzE(ups_hand->at(i)[0], ups_hand->at(i)[1], ups_hand->at(i)[2], ups_hand->at(i)[3]);
+	    ups_mass = lorVect.M();
+	    ups_rapidity = lorVect.Rapidity();
+	    ups_pt = lorVect.Pt();
+	    upsilon_tree->Fill();
+	  }
 	}
 }
 

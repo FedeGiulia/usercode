@@ -44,7 +44,7 @@ process.load('Ponia.Modules.chiCandProducer_cff')
 
 process.out = cms.OutputModule(
     "PoolOutputModule",
-    fileName = cms.untracked.string('testdimuon.root'),
+    fileName = cms.untracked.string('sel_chib.root'),
     outputCommands =  cms.untracked.vstring('drop *',
 					    'keep *_offlinePrimaryVertices_*_*',
                                             'keep *_dimuonProducer_UpsilonCandLorentzVector_*',
