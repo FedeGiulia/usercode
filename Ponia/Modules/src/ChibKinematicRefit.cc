@@ -13,7 +13,7 @@
 //
 // Original Author:  Giulio Dujany
 //         Created:  Tue Mar 26 14:51:59 CET 2013
-// $Id: ChibKinematicRefit.cc,v 1.1 2013/03/27 15:51:24 gdujany Exp $
+// $Id: ChibKinematicRefit.cc,v 1.2 2013/04/18 14:38:39 gdujany Exp $
 //
 //
 
@@ -172,11 +172,14 @@ ChibKinematicRefit::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
       const ParticleMass zero_mass(0);
       float zero_sigma = 1E-6;
       
+      const ParticleMass eleMass(0.000511);
+      float eleSigma = 1E-6;
+      
       KinematicParticleFactoryFromTransientTrack pFactory;
       
       std::vector<RefCountedKinematicParticle> PhotonParticles;
-      PhotonParticles.push_back(pFactory.particle(EETT[0],zero_mass,float(0),float(0),zero_sigma));
-      PhotonParticles.push_back(pFactory.particle(EETT[1],zero_mass,float(0),float(0),zero_sigma));
+      PhotonParticles.push_back(pFactory.particle(EETT[0],eleMass,float(0),float(0),eleSigma));
+      PhotonParticles.push_back(pFactory.particle(EETT[1],eleMass,float(0),float(0),eleSigma));
       
       //KinematicParticleVertexFitter fitter(ps);
       KinematicParticleVertexFitter fitter;
