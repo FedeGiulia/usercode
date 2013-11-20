@@ -37,9 +37,11 @@ DiMuonCandProducer::DiMuonCandProducer(const edm::ParameterSet& iConfig):
   addMuonlessPrimaryVertex_(iConfig.getParameter<bool>("addMuonlessPrimaryVertex"))
   
 {  
-    produces<pat::CompositeCandidateCollection>();
-    produces<std::vector<std::vector<float> > >("UpsilonCandLorentzVector");
-    dimuonSelectionCuts_ = iConfig.getParameter<std::string>("dimuonSelection");
+   produces<pat::CompositeCandidateCollection>();
+   produces<std::vector<std::vector<float> > >("UpsilonCandLorentzVector");
+   dimuonSelectionCuts_ = iConfig.getParameter<std::string>("dimuonSelection");
+	HLTLastFilters = iConfig.getParameter< std::vector<std::string> >("HLTLastFilters");
+	theTriggerNames = iConfig.getParameter< std::vector<std::string> >("theTriggerNames");
 }
 
 
@@ -59,8 +61,8 @@ DiMuonCandProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
   vector<double> muMasses;
   vector<float> tempP4Cand;
 
-  muMasses.push_back( 0.1134289256 );
-  muMasses.push_back( 0.1134289256 );
+  muMasses.push_back( 0.105658367 );
+  muMasses.push_back( 0.105658367 );
 
   std::auto_ptr<pat::CompositeCandidateCollection> oniaOutput(new pat::CompositeCandidateCollection);
   std::auto_ptr<UpsilonCand> lightUpsCand(new UpsilonCand);
@@ -310,6 +312,10 @@ DiMuonCandProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 	}	
       }
 
+	//Trigger matching bool info
+
+		myCand.addUserInt("isTriggerMatched", isTriggerMatched( &myCand) );
+
       StringCutObjectSelector<pat::CompositeCandidate> *dimuonSelection_ = new StringCutObjectSelector<pat::CompositeCandidate>(dimuonSelectionCuts_);
 
       if( ! (*dimuonSelection_)(myCand) ) continue;
@@ -330,6 +336,20 @@ DiMuonCandProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
   iEvent.put(oniaOutput);
   iEvent.put(lightUpsCand,"UpsilonCandLorentzVector");
+}
+
+int DiMuonCandProducer::isTriggerMatched(pat::CompositeCandidate* diMuon_cand){
+	const pat::Muon* muon1 = dynamic_cast<const pat::Muon*>(diMuon_cand->daughter("muon1"));
+	const pat::Muon* muon2 = dynamic_cast<const pat::Muon*>(diMuon_cand->daughter("muon2"));
+	int matched = theTriggerNames.size()==0?1:0;
+
+	// Trigger passed
+	for (unsigned int iTr = 0; iTr<theTriggerNames.size() && !matched; iTr++ ) {
+		const pat::TriggerObjectStandAloneCollection mu1HLTMatches = muon1->triggerObjectMatchesByFilter( HLTLastFilters[iTr] );
+		const pat::TriggerObjectStandAloneCollection mu2HLTMatches = muon2->triggerObjectMatchesByFilter( HLTLastFilters[iTr] );
+		matched = (mu1HLTMatches.size() > 0 && mu2HLTMatches.size() > 0)?1:0;
+	}
+	return matched;
 }
 
 
