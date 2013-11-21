@@ -34,10 +34,12 @@ upsilon_masses = [9.4603, 10.02326, 10.3552]
 ############################# CONFIGURATION END ####################################
 
 
-from PhysicsTools.PatAlgos.producersLayer1.muonProducer_cfi import patMuons
+from MuonAnalysis.MuonAssociators.patMuonsWithTrigger_cff import *
+
 
 from Ponia.Configuration.MuonSelection import muonSelection2012
 selMuons = muonSelection2012.clone()
+selMuons.src='patMuonsWithTrigger'
 
 dimuonProducer = cms.EDProducer(
 	'DiMuonCandProducer',
@@ -47,6 +49,17 @@ dimuonProducer = cms.EDProducer(
 	addCommonVertex=          cms.bool(True),
 	addMuonlessPrimaryVertex= cms.bool(True),
         dimuonSelection = cms.string( 'p4.M > {0} && p4.M < {1} && p4.Pt > {2} && abs(y) < {3} && userFloat("vProb") > {4}'.format(cut_dimuon_Mass_low, cut_dimuon_Mass_high, cut_dimuon_Pt_min, cut_dimuon_rapidity, cut_dimuon_vprob) ),
+    theTriggerNames = cms.vstring('HLT_Dimuon7_Upsilon_v3',
+                                  'HLT_Dimuon7_Upsilon_v4',
+                                  'HLT_Dimuon7_Upsilon_v5',
+                                  'HLT_Dimuon7_Upsilon_v6',
+                                  'HLT_Dimuon7_Upsilon_v7'),
+    
+    HLTLastFilters = cms.vstring('hltVertexmumuFilterDimuon7Upsilon',
+                                 'hltVertexmumuFilterDimuon7Upsilon',
+                                 'hltVertexmumuFilterDimuon7Upsilon',
+                                 'hltVertexmumuFilterDimuon7Upsilon',
+                                 'hltVertexmumuFilterDimuon7Upsilon',) #HLT_Dimuon7_Upsilon_v{3,4,5,6,7}
 	)
 
 diMuonCount = cms.EDFilter(
@@ -107,7 +120,7 @@ refit3S = cms.EDProducer('ChibKinematicRefit',
 				 product_name = cms.string("chiCand3S")
 				 )
 
-chibSequence = cms.Sequence(patMuons*   #create PAT muons
+chibSequence = cms.Sequence(patMuonsWithTriggerSequence* 
                             selMuons*   #official muon selection
                             dimuonProducer*     #dimuon producer
                             diMuonCount*
