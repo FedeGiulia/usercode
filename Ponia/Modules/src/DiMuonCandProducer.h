@@ -47,6 +47,7 @@ class DiMuonCandProducer : public edm::EDProducer {
  private:
 
   virtual void produce(edm::Event&, const edm::EventSetup&);
+	int isTriggerMatched(pat::CompositeCandidate*);
 
   // ----------member data ---------------------------
  private:
@@ -64,6 +65,9 @@ class DiMuonCandProducer : public edm::EDProducer {
   typedef std::vector<fl_vect> UpsilonCand;
 
   std::string dimuonSelectionCuts_;
+	std::vector<std::string> HLTLastFilters;
+	std::vector<std::string> theTriggerNames;
+
 
 };
 
