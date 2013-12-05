@@ -72,6 +72,9 @@ void ChiCandProducer::produce(edm::Event& event, const edm::EventSetup& esetup){
 	   continue;
 	}
 
+	//Copy the status of trigger matching from the Dimuon candidate inside Chi cand
+	chiCand.addUserInt("isTriggerMatched", dimuonCand.userInt("isTriggerMatched"));
+
 	chiCandColl->push_back(chiCand);
 	piZeroRejectCand->push_back(invmc);
 	chiConversions->push_back(*conv);
