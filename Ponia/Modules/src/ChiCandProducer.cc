@@ -44,7 +44,8 @@ void ChiCandProducer::produce(edm::Event& event, const edm::EventSetup& esetup){
   
   // TODO: have a collection of refs
   const reco::PFCandidateCollection pfphotons = selectPFPhotons(*pfcandidates);
- 
+
+  // Note: since Dimuon cand are sorted by decreasing vertex probability then the first chi cand is the one associated with the "best" dimuon 
   for (pat::CompositeCandidateCollection::const_iterator  dimuonCand = dimuons->begin(); dimuonCand!= dimuons->end(); ++dimuonCand){
      // loop on conversion candidates, make chi cand
      for (reco::ConversionCollection::const_iterator conv = conversions->begin(); conv!= conversions->end(); ++conv){
@@ -73,7 +74,7 @@ void ChiCandProducer::produce(edm::Event& event, const edm::EventSetup& esetup){
 	}
 
 	//Copy the status of trigger matching from the Dimuon candidate inside Chi cand
-	chiCand.addUserInt("isTriggerMatched", dimuonCand.userInt("isTriggerMatched"));
+	chiCand.addUserInt("isTriggerMatched", dimuonCand->userInt("isTriggerMatched"));
 
 	chiCandColl->push_back(chiCand);
 	piZeroRejectCand->push_back(invmc);
