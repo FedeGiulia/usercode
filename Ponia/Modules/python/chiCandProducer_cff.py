@@ -120,7 +120,7 @@ refit3S = cms.EDProducer('ChibKinematicRefit',
 				 product_name = cms.string("chiCand3S")
 				 )
 
-chibSequence = cms.Sequence(patMuonsWithTriggerSequence* 
+chiSequence = cms.Sequence(patMuonsWithTriggerSequence* 
                             selMuons*   #official muon selection
                             dimuonProducer*     #dimuon producer
                             diMuonCount*

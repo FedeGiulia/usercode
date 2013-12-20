@@ -58,7 +58,7 @@ process.out = cms.OutputModule(
 
 process.end = cms.EndPath(process.out)
 
-process.p = cms.Path(process.triggerSelection*process.chibSequence)
+process.p = cms.Path(process.triggerSelection*process.chiSequence)
 process.schedule = cms.Schedule(process.p,process.end)
 
 

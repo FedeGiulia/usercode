@@ -31,5 +31,3 @@ muonSelection2011 = cms.EDFilter('PATMuonSelector',
                     ),
    filter = cms.bool(True),
 )
-
-                    
