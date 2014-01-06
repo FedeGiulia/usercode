@@ -30,7 +30,7 @@ chi_deltaM_min = 0.0    # This two values define the minimum and the maximum val
 chi_deltaM_max = 2.0    # required for the QValue of the Chi candidate
 chi_dzMax = 0.5
 upsilon_masses = [9.4603, 10.02326, 10.3552]
-
+triggermatch_switch = True
 ############################# CONFIGURATION END ####################################
 
 
@@ -49,17 +49,13 @@ dimuonProducer = cms.EDProducer(
 	addCommonVertex=          cms.bool(True),
 	addMuonlessPrimaryVertex= cms.bool(True),
         dimuonSelection = cms.string( 'p4.M > {0} && p4.M < {1} && p4.Pt > {2} && abs(y) < {3} && userFloat("vProb") > {4}'.format(cut_dimuon_Mass_low, cut_dimuon_Mass_high, cut_dimuon_Pt_min, cut_dimuon_rapidity, cut_dimuon_vprob) ),
-    theTriggerNames = cms.vstring('HLT_Dimuon7_Upsilon_v3',
-                                  'HLT_Dimuon7_Upsilon_v4',
-                                  'HLT_Dimuon7_Upsilon_v5',
-                                  'HLT_Dimuon7_Upsilon_v6',
-                                  'HLT_Dimuon7_Upsilon_v7'),
+    theTriggerNames = cms.vstring('HLT_Dimuon5_Upsilon_v*',
+                                  'HLT_Dimuon7_Upsilon_v*',
+                                  ),
     
-    HLTLastFilters = cms.vstring('hltVertexmumuFilterDimuon7Upsilon',
+    HLTLastFilters = cms.vstring('hltVertexmumuFilterDimuon5Upsilon',
                                  'hltVertexmumuFilterDimuon7Upsilon',
-                                 'hltVertexmumuFilterDimuon7Upsilon',
-                                 'hltVertexmumuFilterDimuon7Upsilon',
-                                 'hltVertexmumuFilterDimuon7Upsilon',) #HLT_Dimuon7_Upsilon_v{3,4,5,6,7}
+                                 ) #HLT_Dimuon7_Upsilon_v{3,4,5,6,7}
 	)
 
 diMuonCount = cms.EDFilter(
@@ -92,6 +88,7 @@ chiCandProducer = cms.EDProducer(
     conversions = cms.InputTag(tag_chi_conv_prod, tag_chi_conv_lab),
     dimuons     = cms.InputTag('dimuonProducer'),
     pfcandidates = cms.InputTag(tag_pfCandidates),
+    triggerMatch    = cms.bool(triggermatch_switch),
     pi0OnlineSwitch = cms.bool(pi0_online_switch),
     pi0SmallWindow   = cms.vdouble(pi0_small_min, pi0_small_max),
     pi0LargeWindow   = cms.vdouble(pi0_large_min, pi0_large_max),

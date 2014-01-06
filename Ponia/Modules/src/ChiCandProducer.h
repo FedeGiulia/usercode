@@ -80,6 +80,9 @@ class ChiCandProducer : public edm::EDProducer {
   std::vector<double> deltaMass_;
   double dzMax_;
 
+  // use only trigger-matched J/Psi or Upsilon   
+  bool triggerMatch_;  
+    
   int candidates;
   int delta_mass_fail;
   int dz_cut_fail;
