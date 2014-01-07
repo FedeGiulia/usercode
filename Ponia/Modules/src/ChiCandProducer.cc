@@ -11,7 +11,8 @@ ChiCandProducer::ChiCandProducer(const edm::ParameterSet& ps):
   pi0SmallWindow_(ps.getParameter<std::vector<double> >("pi0SmallWindow")),
   pi0LargeWindow_(ps.getParameter<std::vector<double> >("pi0LargeWindow")),
   deltaMass_(ps.getParameter<std::vector<double> >("deltaMass")),
-  dzMax_(ps.getParameter<double>("dzmax"))
+  dzMax_(ps.getParameter<double>("dzmax")),
+  triggerMatch_(ps.getParameter<bool>("triggerMatch"))
 {
   produces<pat::CompositeCandidateCollection>("chicand");
   produces<reco::ConversionCollection>("chiConversions");
@@ -22,6 +23,7 @@ ChiCandProducer::ChiCandProducer(const edm::ParameterSet& ps):
   delta_mass_fail = 0;
   dz_cut_fail = 0;
   pizero_fail = 0;
+  
 }
  
 
@@ -48,6 +50,12 @@ void ChiCandProducer::produce(edm::Event& event, const edm::EventSetup& esetup){
 
   // Note: since Dimuon cand are sorted by decreasing vertex probability then the first chi cand is the one associated with the "best" dimuon 
   for (pat::CompositeCandidateCollection::const_iterator  dimuonCand = dimuons->begin(); dimuonCand!= dimuons->end(); ++dimuonCand){
+
+     // use only trigger-matched Jpsi or Upsilon if so requested 
+     if (triggerMatch_){
+         if (!dimuonCand->userInt("isTriggerMatched")) continue; 
+     }
+
      // loop on conversion candidates, make chi cand
      for (reco::ConversionCollection::const_iterator conv = conversions->begin(); conv!= conversions->end(); ++conv){
 
@@ -74,8 +82,6 @@ void ChiCandProducer::produce(edm::Event& event, const edm::EventSetup& esetup){
 	   continue;
 	}
 
-	//Copy the status of trigger matching from the Dimuon candidate inside Chi cand
-	chiCand.addUserInt("isTriggerMatched", dimuonCand->userInt("isTriggerMatched"));
 
 	chiCandColl->push_back(chiCand);
 // Temp: check if it fixes ram use
