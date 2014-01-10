@@ -16,7 +16,8 @@ ChiCandProducer::ChiCandProducer(const edm::ParameterSet& ps):
 {
   produces<pat::CompositeCandidateCollection>("chicand");
   produces<reco::ConversionCollection>("chiConversions");
-  produces<std::vector<std::vector<float> > >("piZeroRejectCand");
+// Temp
+//  produces<std::vector<std::vector<float> > >("piZeroRejectCand");
 
   candidates = 0;
   delta_mass_fail = 0;
@@ -83,14 +84,15 @@ void ChiCandProducer::produce(edm::Event& event, const edm::EventSetup& esetup){
 
 
 	chiCandColl->push_back(chiCand);
-	piZeroRejectCand->push_back(invmc);
+// Temp: check if it fixes ram use
+//	piZeroRejectCand->push_back(invmc);
 	chiConversions->push_back(*conv);
 	candidates++;    
      }
   }
   event.put(chiCandColl,"chicand");
   event.put(chiConversions,"chiConversions");
-  event.put(piZeroRejectCand,"piZeroRejectCand");
+//  event.put(piZeroRejectCand,"piZeroRejectCand");
 
 }
 

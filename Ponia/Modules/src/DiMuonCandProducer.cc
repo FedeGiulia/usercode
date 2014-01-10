@@ -327,13 +327,14 @@ DiMuonCandProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
       tempP4Cand.push_back(myCand.py());
       tempP4Cand.push_back(myCand.pz());
       tempP4Cand.push_back(myCand.energy());
-      lightUpsCand->push_back(tempP4Cand);
+//	Temporary, testing if it solves excessive use of ram in chic analysis
+//      lightUpsCand->push_back(tempP4Cand);
     }
   }
 
   // std::sort(oniaOutput->begin(),oniaOutput->end(),pTComparator_);
   std::sort(oniaOutput->begin(),oniaOutput->end(),vPComparator_);
-
+  delete dimuonSelection_;
   iEvent.put(oniaOutput);
   iEvent.put(lightUpsCand,"UpsilonCandLorentzVector");
 }
