@@ -156,9 +156,15 @@ static const Double_t Y1SMass =  9.46030;
 static const Double_t Y2SMass = 10.02326;
 static const Double_t Y3SMass = 10.3552;
 
-static const double Y_sig_par_A = 0.058;
-static const double Y_sig_par_B = 0.047;
-static const double Y_sig_par_C = 0.22;
+// 2011 par
+//static const double Y_sig_par_A = 0.058;
+//static const double Y_sig_par_B = 0.047;
+//static const double Y_sig_par_C = 0.22;
+
+// 2012 par
+static const double Y_sig_par_A = 62.62;
+static const double Y_sig_par_B = 56.3;
+static const double Y_sig_par_C = -20.77;
 
 
 //
@@ -486,8 +492,15 @@ RootupleChib::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 		conv_vertex = chi_cand.daughter("photon")->vertex().rho();
 		dz = chi_cand.userFloat("dz");
 		
-		double sigma = Y_sig_par_A+Y_sig_par_B*(fabs(dimuon_rapidity)-Y_sig_par_C);
-		if (sigma < Y_sig_par_A) sigma = Y_sig_par_A;
+        // old (2011) parameterization
+		//double sigma = Y_sig_par_A+Y_sig_par_B*(fabs(dimuon_rapidity)-Y_sig_par_C);
+		//if (sigma < Y_sig_par_A) sigma = Y_sig_par_A;
+
+        // 2012 parameterization
+        double sigma = Y_sig_par_A + 
+                       Y_sig_par_B * pow(fabs(dimuon_rapidity), 2) + 
+                       Y_sig_par_C * pow(fabs(dimuon_rapidity), 3) ;
+
 		Y1S_nsigma = fabs(dimuon_mass - Y1SMass)/sigma;
 		Y2S_nsigma = fabs(dimuon_mass - Y2SMass)/sigma;
 		Y3S_nsigma = fabs(dimuon_mass - Y3SMass)/sigma;
