@@ -17,13 +17,15 @@ process.MessageLogger.cout.threshold = cms.untracked.string("DEBUG")
 
 input_filename = "file:9A42402F-DF68-E211-9E73-E41F131812CC.root"
 
+input_filename = 'file:/data2/data/degano/ponia_development/CMSSW_5_3_3/src/test/9A42402F-DF68-E211-9E73-E41F131812CC.root'
+
 process.source = cms.Source(
     "PoolSource",
     fileNames = cms.untracked.vstring(input_filename)
     )
 
 process.maxEvents = cms.untracked.PSet(
-    input = cms.untracked.int32(-1)
+    input = cms.untracked.int32(10)
     )
 
 process.triggerSelection = cms.EDFilter("TriggerResultsFilter",

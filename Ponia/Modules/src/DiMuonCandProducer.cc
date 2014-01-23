@@ -314,11 +314,11 @@ DiMuonCandProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
 	//Trigger matching bool info
 
-		myCand.addUserInt("isTriggerMatched", isTriggerMatched( &myCand) );
+	  myCand.addUserInt("isTriggerMatched", isTriggerMatched( &myCand) );
 
-      StringCutObjectSelector<pat::CompositeCandidate> *dimuonSelection_ = new StringCutObjectSelector<pat::CompositeCandidate>(dimuonSelectionCuts_);
+      StringCutObjectSelector<pat::CompositeCandidate> dimuonSelection(dimuonSelectionCuts_);
 
-      if( ! (*dimuonSelection_)(myCand) ) continue;
+      if( ! (dimuonSelection)(myCand) ) continue;
 
       // ---- Push back output ----  
       oniaOutput->push_back(myCand);
@@ -334,7 +334,6 @@ DiMuonCandProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
   // std::sort(oniaOutput->begin(),oniaOutput->end(),pTComparator_);
   std::sort(oniaOutput->begin(),oniaOutput->end(),vPComparator_);
-  delete dimuonSelection_;
   iEvent.put(oniaOutput);
   iEvent.put(lightUpsCand,"UpsilonCandLorentzVector");
 }

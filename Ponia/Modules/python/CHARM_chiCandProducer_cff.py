@@ -4,8 +4,8 @@ import FWCore.ParameterSet.Config as cms
 ####################################################################################
 
 tag_dimuon = 'dimuonProducer' # Tag name of the dimuon collection as saved from process.dimuonProducer
-cut_dimuon_Mass_low = 3.0
-cut_dimuon_Mass_high = 3.2
+cut_dimuon_Mass_low = 2.85
+cut_dimuon_Mass_high = 3.3
 cut_dimuon_Pt_min = 0.0
 cut_dimuon_rapidity = 1.6
 cut_dimuon_vprob = 0.01 # Minimum vertex probability for dimuon candidate
@@ -31,7 +31,7 @@ chi_deltaM_max = 2.0    # required for the QValue of the Chi candidate
 chi_dzMax = 0.5
 #upsilon_masses = [9.4603, 10.02326, 10.3552]
 jpsi_mass = 3.0969
-
+triggermatch_switch = True
 ############################# CONFIGURATION END ####################################
 
 
@@ -88,7 +88,8 @@ chiCandProducer = cms.EDProducer(
     pi0SmallWindow   = cms.vdouble(pi0_small_min, pi0_small_max),
     pi0LargeWindow   = cms.vdouble(pi0_large_min, pi0_large_max),
     deltaMass   = cms.vdouble(chi_deltaM_min, chi_deltaM_max),
-    dzmax       = cms.double(chi_dzMax)
+    dzmax       = cms.double(chi_dzMax),
+    triggerMatch    = cms.bool(triggermatch_switch),
     )
 
 refit = cms.EDProducer('ChibKinematicRefit',
