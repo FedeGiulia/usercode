@@ -82,6 +82,8 @@ class RootupleChib : public edm::EDAnalyzer {
   edm::InputTag triggerResults_Label;
   bool isMC_;
   
+  UInt_t   run;
+  UInt_t   event;
   Double_t invm1S;
   Double_t invm2S;
   Double_t invm3S;
@@ -184,7 +186,11 @@ RootupleChib::RootupleChib(const edm::ParameterSet& iConfig):
 	edm::Service<TFileService> fs;
 	chib_tree = fs->make<TTree>("chibTree","Tree of chib");
 
-	chib_tree->Branch("invm1S", &invm1S, "invm1S/D");
+	
+    chib_tree->Branch("run"  , &run,   "run/I");
+    chib_tree->Branch("event", &event, "event/I");
+
+    chib_tree->Branch("invm1S", &invm1S, "invm1S/D");
 	chib_tree->Branch("invm2S", &invm2S, "invm2S/D");
 	chib_tree->Branch("invm3S", &invm3S, "invm3S/D");
 	chib_tree->Branch("chib_mass", &chib_mass, "chib_mass/D");
@@ -211,6 +217,7 @@ RootupleChib::RootupleChib(const edm::ParameterSet& iConfig):
 	chib_tree->Branch("trigger", &trigger, "trigger/I");
 	chib_tree->Branch("rf1S_chib_mass", &rf1S_chib_mass, "rf1S_chib_mass/D");
 	chib_tree->Branch("probFit1S", &probFit1S, "probFit1S/D");
+
 	chib_tree->Branch("rf1S_chib_pt", &rf1S_chib_pt, "rf1S_chib_pt/D");
 	chib_tree->Branch("rf1S_chib_eta", &rf1S_chib_eta, "rf1S_chib_eta/D");
 	chib_tree->Branch("rf1S_dimuon_mass", &rf1S_dimuon_mass, "rf1S_dimuon_mass/D");
@@ -221,7 +228,7 @@ RootupleChib::RootupleChib(const edm::ParameterSet& iConfig):
 	chib_tree->Branch("rf1S_photon_pt", &rf1S_photon_pt, "rf1S_photon_pt/D");
 	chib_tree->Branch("rf2S_chib_mass", &rf2S_chib_mass, "rf2S_chib_mass/D");
 	chib_tree->Branch("probFit2S", &probFit2S, "probFit2S/D");
-        chib_tree->Branch("rf3S_chib_mass", &rf3S_chib_mass, "rf3S_chib_mass/D");
+    chib_tree->Branch("rf3S_chib_mass", &rf3S_chib_mass, "rf3S_chib_mass/D");
 	chib_tree->Branch("probFit3S", &probFit3S, "probFit3S/D");
 
 	if(isMC_)
@@ -548,10 +555,12 @@ RootupleChib::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 		    probFit3S = 0;
 		  }
 		
-		
+		run=   iEvent.id().run();
+        event= iEvent.id().event();
+        //std::cout << "Run : " << run <<  " Event : " << event<< std::endl;
 		chib_tree->Fill();
-	      }
-	  }
+	      } // for i 
+	  } // if chi_cand_handle && refit1S &&
 	
 	
 	

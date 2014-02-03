@@ -82,6 +82,9 @@ class RootupleChic : public edm::EDAnalyzer {
   bool isMC_;
   
 
+  UInt_t   run;
+  UInt_t   event;
+  
   TLorentzVector chi_p4;
   TLorentzVector dimuon_p4;
   TLorentzVector muonP_p4;
@@ -116,6 +119,7 @@ class RootupleChic : public edm::EDAnalyzer {
   
 
   Double_t probFit1S;
+  Int_t    rf1S_rank;
   Double_t probFit2S;
 
   
@@ -172,6 +176,10 @@ RootupleChic::RootupleChic(const edm::ParameterSet& iConfig):
 	edm::Service<TFileService> fs;
 	chib_tree = fs->make<TTree>("chicTree","Tree of chic");
 
+    chib_tree->Branch("run"  , &run,   "run/I");
+    chib_tree->Branch("event", &event, "event/I");
+
+
 	chib_tree->Branch("chi_p4",    "TLorentzVector", &chi_p4);
 	chib_tree->Branch("dimuon_p4", "TLorentzVector", &dimuon_p4);
     chib_tree->Branch("muonP_p4",  "TLorentzVector", &muonP_p4);
@@ -206,6 +214,7 @@ RootupleChic::RootupleChic(const edm::ParameterSet& iConfig):
 	chib_tree->Branch("numPrimaryVertices", &numPrimaryVertices, "numPrimaryVertices/D");
 	chib_tree->Branch("trigger", &trigger, "trigger/I");
 	chib_tree->Branch("probFit1S", &probFit1S, "probFit1S/D");
+    chib_tree->Branch("rf1S_rank", &rf1S_rank, "rf1S_rank/I");
 	chib_tree->Branch("probFit2S", &probFit2S, "probFit2S/D");
 
 	if(isMC_)
@@ -340,37 +349,24 @@ RootupleChic::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	    const edm::TriggerNames & TheTriggerNames = iEvent.triggerNames(*triggerResults_handle);
 	    
 	    vector <unsigned int> bits_5;
-	    for(int version = 3; version<7; version ++){
+	    for(int version = 3; version<8; version ++){
             //char str[30];
             //sprintf(str, "HLT_Dimuon5_Upsilon_v%i", version);
             //puts(str);
             stringstream ss;
-            ss<<"HLT_Dimuon5_Upsilon_v"<<version;
+            ss<<"HLT_Dimuon8_Jpsi_v"<<version;
             bits_5.push_back(TheTriggerNames.triggerIndex( edm::InputTag(ss.str()).label().c_str()));
         }
 
 	    vector <unsigned int> bits_7;
 	    for(int version = 3; version<8; version ++){
             stringstream ss;
-            ss<<"HLT_Dimuon7_Upsilon_v"<<version;
+            ss<<"HLT_Dimuon10_Jpsi_v"<<version;
             bits_7.push_back(TheTriggerNames.triggerIndex( edm::InputTag(ss.str()).label().c_str()));
         }
 
-	    vector <unsigned int> bits_8;
-	    for(int version = 3; version<7; version ++){
-            stringstream ss;
-            ss<<"HLT_Dimuon8_Upsilon_v"<<version;
-            bits_8.push_back(TheTriggerNames.triggerIndex( edm::InputTag(ss.str()).label().c_str()));
-        }
 
-	    vector <unsigned int> bits_11;
-	    for(int version = 3; version<7; version ++){
-            stringstream ss;
-            ss<<"HLT_Dimuon11_Upsilon_v"<<version;
-            bits_11.push_back(TheTriggerNames.triggerIndex( edm::InputTag(ss.str()).label().c_str()));
-        }
 	    
-
 	    for(unsigned int i=0; i<bits_5.size(); i++){
 	    	unsigned int bit = bits_5[i];
 	    	if( bit < triggerResults_handle->size() ){
@@ -389,24 +385,7 @@ RootupleChic::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
                 }
             }
         }
-	    for(unsigned int i=0; i<bits_8.size(); i++){
-	    	unsigned int bit = bits_8[i];
-	    	if( bit < triggerResults_handle->size() ){
-	    	    if( triggerResults_handle->accept( bit ) && !triggerResults_handle->error( bit ) ){
-                    //std::cout<<std::endl<<"Passed trigger 8"<<std::endl;
-                    trigger += 4;
-                }
-            }
-        }
-	    for(unsigned int i=0; i<bits_11.size(); i++){
-	    	unsigned int bit = bits_11[i];
-	    	if( bit < triggerResults_handle->size() ){
-	    	    if( triggerResults_handle->accept( bit ) && !triggerResults_handle->error( bit ) ){
-                    //std::cout<<std::endl<<"Passed trigger 11"<<std::endl;
-                    trigger += 8;
-                }
-            }
-        }
+
         
     }
 	
@@ -415,7 +394,7 @@ RootupleChic::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
 	    for(unsigned int i=0; i< chi_cand_handle->size(); i++){
             chi_cand = chi_cand_handle->at(i);
-
+            
             if( pi0_comb_handle.isValid() && pi0_comb_handle->at(i).size() > 0 ){
                 pi0_comb = pi0_comb_handle->at(i);
                 for(unsigned int k=0; k< pi0_comb.size(); k++){
@@ -436,16 +415,16 @@ RootupleChic::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
                                    chi_cand.daughter("dimuon")->eta(),
                                    chi_cand.daughter("dimuon")->phi(),
                                    chi_cand.daughter("dimuon")->mass()); 
-
+            
             photon_p4.SetPtEtaPhiM(chi_cand.daughter("photon")->pt(),
                                    chi_cand.daughter("photon")->eta(),
                                    chi_cand.daughter("photon")->phi(),
                                    chi_cand.daughter("photon")->mass()); 
           
-
+            
             reco::Candidate::LorentzVector vP = chi_cand.daughter("dimuon")->daughter("muon1")->p4();
             reco::Candidate::LorentzVector vM = chi_cand.daughter("dimuon")->daughter("muon2")->p4();
-
+            
             if (chi_cand.daughter("dimuon")->daughter("muon1")->charge() <0){
                 vP = chi_cand.daughter("dimuon")->daughter("muon2")->p4();
                 vM = chi_cand.daughter("dimuon")->daughter("muon1")->p4();
@@ -487,11 +466,10 @@ RootupleChic::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
             psi1S_nsigma = fabs(dimuon_p4.M() - psi1SMass)/sigma;
             psi2S_nsigma = fabs(dimuon_p4.M() - psi2SMass)/sigma;
             
-        } // if chic cand handle
         
 
-        if(refit1S_handle.isValid()){  
-            for(unsigned int i=0; i< refit1S_handle->size(); i++){
+            if(refit1S_handle.isValid() && i<refit1S_handle->size()){  
+                
                 
                 refit1S = refit1S_handle->at(i);
                 
@@ -523,19 +501,19 @@ RootupleChic::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
                 rf1S_muonN_p4.SetPtEtaPhiM(vM.pt(),vM.eta(),vM.phi(),vM.mass()); 
                 probFit1S = refit1S.userFloat("vProb");
 
-            } //for cand
-        } else {
-            rf1S_chi_p4.SetPtEtaPhiM(0,0,0,0);                 
-            rf1S_dimuon_p4.SetPtEtaPhiM(0,0,0,0); 
-            rf1S_photon_p4.SetPtEtaPhiM(0,0,0,0); 
-            rf1S_muonP_p4.SetPtEtaPhiM(0,0,0,0); 
-            rf1S_muonN_p4.SetPtEtaPhiM(0,0,0,0);             
-            probFit1S = 0;
-        }
+                rf1S_rank = i;
+            } else {
+                rf1S_chi_p4.SetPtEtaPhiM(0,0,0,0);                 
+                rf1S_dimuon_p4.SetPtEtaPhiM(0,0,0,0); 
+                rf1S_photon_p4.SetPtEtaPhiM(0,0,0,0); 
+                rf1S_muonP_p4.SetPtEtaPhiM(0,0,0,0); 
+                rf1S_muonN_p4.SetPtEtaPhiM(0,0,0,0);             
+                probFit1S = 0;
+                rf1S_rank=-1; 
+            } // if rf1S is valid
 
 
-        if(refit2S_handle.isValid()){  
-            for(unsigned int i=0; i< refit2S_handle->size(); i++){
+            if(refit2S_handle.isValid()&& i< refit1S_handle->size()){  
                 refit2S = refit2S_handle->at(i);
                 
                 rf2S_chi_p4.SetPtEtaPhiM(refit2S.pt(),
@@ -555,30 +533,34 @@ RootupleChic::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
                 
                 reco::Candidate::LorentzVector vP = refit2S.daughter("dimuon")->daughter("muon1")->p4();
                 reco::Candidate::LorentzVector vM = refit2S.daughter("dimuon")->daughter("muon2")->p4();
-                
+            
                 if (refit2S.daughter("dimuon")->daughter("muon1")->charge() <0){
                     vP = refit2S.daughter("dimuon")->daughter("muon2")->p4();
                     vM = refit2S.daughter("dimuon")->daughter("muon1")->p4();
                 }
-
                 
-                rf2S_muonP_p4.SetPtEtaPhiM(vP.pt(),vP.eta(),vP.phi(),vP.mass()); 
-                rf2S_muonN_p4.SetPtEtaPhiM(vM.pt(),vM.eta(),vM.phi(),vM.mass()); 
-                               
-                probFit2S = refit2S.userFloat("vProb");
-            } //for
-        } else {
-            rf2S_chi_p4.SetPtEtaPhiM(0,0,0,0);                 
-            rf2S_dimuon_p4.SetPtEtaPhiM(0,0,0,0); 
-            rf2S_photon_p4.SetPtEtaPhiM(0,0,0,0); 
-            rf2S_muonP_p4.SetPtEtaPhiM(0,0,0,0); 
-            rf2S_muonN_p4.SetPtEtaPhiM(0,0,0,0); 
-            probFit2S = 0;
-        }
-			
-
-        chib_tree->Fill();
-    }
+                
+            rf2S_muonP_p4.SetPtEtaPhiM(vP.pt(),vP.eta(),vP.phi(),vP.mass()); 
+            rf2S_muonN_p4.SetPtEtaPhiM(vM.pt(),vM.eta(),vM.phi(),vM.mass()); 
+            
+            probFit2S = refit2S.userFloat("vProb");
+            
+            } else {
+                rf2S_chi_p4.SetPtEtaPhiM(0,0,0,0);                 
+                rf2S_dimuon_p4.SetPtEtaPhiM(0,0,0,0); 
+                rf2S_photon_p4.SetPtEtaPhiM(0,0,0,0); 
+                rf2S_muonP_p4.SetPtEtaPhiM(0,0,0,0); 
+                rf2S_muonN_p4.SetPtEtaPhiM(0,0,0,0); 
+                probFit2S = 0;
+            } // if rf2S valid
+            
+            run=   iEvent.id().run();
+            event= iEvent.id().event();
+            //std::cout << "Run : " << run <<  " Event : " << event<< " M() "<< rf1S_chi_p4.M()<<  " rank "<< rf1S_rank<< " p " << probFit1S << std::endl;
+            chib_tree->Fill();
+        } // for i on chi_cand_handle
+        
+    }// if chi handle valid
 }
 
 	

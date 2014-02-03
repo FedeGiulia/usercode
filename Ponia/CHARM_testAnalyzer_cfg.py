@@ -25,7 +25,7 @@ process.source = cms.Source(
     )
 
 process.maxEvents = cms.untracked.PSet(
-    input = cms.untracked.int32(10)
+    input = cms.untracked.int32(-1)
     )
 
 process.triggerSelection = cms.EDFilter("TriggerResultsFilter",
@@ -38,6 +38,7 @@ process.triggerSelection = cms.EDFilter("TriggerResultsFilter",
                                         throw = cms.bool( True )
                                         )
 
+#process.load('Ponia.Modules.CHARM_chiCandProducer_mysel_cff')
 process.load('Ponia.Modules.CHARM_chiCandProducer_cff')
 
 process.out = cms.OutputModule(

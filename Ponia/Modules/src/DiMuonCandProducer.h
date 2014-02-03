@@ -65,8 +65,8 @@ class DiMuonCandProducer : public edm::EDProducer {
   typedef std::vector<fl_vect> UpsilonCand;
 
   std::string dimuonSelectionCuts_;
-	std::vector<std::string> HLTLastFilters;
-	std::vector<std::string> theTriggerNames;
+  std::vector<std::string> HLTLastFilters;
+  std::vector<std::string> theTriggerNames;
 
 
 };

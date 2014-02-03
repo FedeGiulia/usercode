@@ -80,6 +80,18 @@ class ChibKinematicRefit : public edm::EDProducer {
   edm::InputTag chi_cand_, conversions_;
   double upsilon_mass_;
   std::string product_name_;
+
+
+    template<typename T>
+    struct GreaterByVProb {
+        typedef T first_argument_type;
+        typedef T second_argument_type;
+        bool operator()( const T & t1, const T & t2 ) const {
+            return t1.userFloat("vProb") > t2.userFloat("vProb");
+        }
+    };
+
+
 };
 
 //
@@ -306,7 +318,11 @@ ChibKinematicRefit::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 	}
     }  
   // End kinematic fit
-  
+
+  // now sort by vProb
+  ChibKinematicRefit::GreaterByVProb<pat::CompositeCandidate> vPComparator;
+  std::sort(chicCompCandRefitColl->begin(),chicCompCandRefitColl->end(), vPComparator);
+
   iEvent.put(chicCompCandRefitColl,product_name_); 
   
 }
