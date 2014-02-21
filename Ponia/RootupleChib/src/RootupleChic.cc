@@ -12,9 +12,7 @@
 */
 //
 // Original Author:  Alessandro Degano,32 1-C13,+41227678098
-//         Created:  Tue Feb 19 14:32:37 CET 2013
-// $Id: RootupleChib.cc,v 1.4 2013/06/21 12:49:49 gdujany Exp $
-//
+//         Created:  Tue Feb 19 14:32:37 CET 2013 //
 //
 
 
@@ -389,10 +387,14 @@ RootupleChic::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
         
     }
 	
+    bool bestCandidateOnly_ = true;
 	// grabbing chi inforamtion
 	if(chi_cand_handle.isValid() ){
 
-	    for(unsigned int i=0; i< chi_cand_handle->size(); i++){
+        unsigned int csize = chi_cand_handle->size();
+        if (bestCandidateOnly_) csize =1;
+
+	    for(unsigned int i=0; i< csize; i++){
             chi_cand = chi_cand_handle->at(i);
             
             if( pi0_comb_handle.isValid() && pi0_comb_handle->at(i).size() > 0 ){
